@@ -48,12 +48,14 @@ func (v Validator) Validate() error {
 		return fmt.Errorf("required headers are missing: %v", missing)
 	}
 
-	for _, row := range v.records {
-		for i, _ := range row {
-			expected := v.schema.Columns[i].Name
-			got := row[i]
-			if expected != got {
-				return fmt.Errorf("validaton failed, column name is wrong, expected: %v, got: %v", expected, got)
+	for i, row := range v.records {
+		if i == 0 && v.firstHeader {
+			for i, _ := range row {
+				expected := v.schema.Columns[i].Name
+				got := row[i]
+				if expected != got {
+					return fmt.Errorf("validaton failed, column name is wrong, expected: %v, got: %v", expected, got)
+				}
 			}
 		}
 	}

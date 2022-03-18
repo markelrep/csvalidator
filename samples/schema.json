@@ -2,12 +2,10 @@
   "columns": [
     {
       "name": "id",
-      "dataType": "",
       "required": true
     },
     {
       "name": "comment",
-      "dataType": "string",
       "required": false
     }
   ]

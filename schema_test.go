@@ -13,12 +13,10 @@ func TestSchema_ParseSchema(t *testing.T) {
 		Columns: []column{
 			{
 				Name:     "id",
-				DataType: "",
 				Required: true,
 			},
 			{
-				Name:     "comment",
-				DataType: "string",
+				Name: "comment",
 			},
 		},
 	}

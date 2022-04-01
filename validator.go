@@ -1,6 +1,8 @@
 package csvalidator
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Validator struct {
 	records     [][]string
@@ -48,14 +50,25 @@ func (v Validator) Validate() error {
 		return fmt.Errorf("required headers are missing: %v", missing)
 	}
 
-	for i, row := range v.records {
-		if i == 0 && v.firstHeader {
-			for i, _ := range row {
-				expected := v.schema.Columns[i].Name
-				got := row[i]
-				if expected != got {
-					return fmt.Errorf("validaton failed, column name is wrong, expected: %v, got: %v", expected, got)
-				}
+	// TODO Separate header validation from records valudation
+	records := v.records
+	if v.firstHeader {
+		header := v.records[0]
+		records = v.records[1:]
+		for column := range header {
+			expected := v.schema.Columns[column].Name
+			got := header[column]
+			if expected != got {
+				return fmt.Errorf("validaton failed, column name is wrong, expected: %v, got: %v", expected, got)
+			}
+		}
+	}
+
+	for row := range records {
+		for column := range records[row] {
+			logPrefix := fmt.Sprintf("[Row %v | Column %v]", row+1, column+1)
+			if err := v.schema.Columns[column].Validate(records[row][column]); err != nil {
+				return fmt.Errorf("%v %v", logPrefix, err)
 			}
 		}
 	}

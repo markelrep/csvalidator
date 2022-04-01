@@ -1,0 +1,9 @@
+{
+  "columns": [
+    {
+      "name": "comment",
+      "required": true,
+      "contains": ["only", "good", "words"]
+    }
+  ]
+}

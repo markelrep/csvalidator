@@ -27,26 +27,12 @@ func NewValidator(path, schemaPath string, firstHeader bool) (Validator, error) 
 }
 
 func (v Validator) Validate() error {
+	checks := NewChecks(v.schema)
 	for _, f := range v.files {
-		missing := make([]string, 0, len(f.headers))
-		for _, header := range v.schema.Columns {
-			if _, ok := f.headers[header.Name]; !ok && header.Required {
-				missing = append(missing, header.Name)
-			}
-		}
-		if len(missing) > 0 {
-			return fmt.Errorf("required headers are missing: %v", missing)
-		}
-
-		for i, row := range f.records {
-			if i == 0 && f.firstIsHeader {
-				for i := range row {
-					expected := v.schema.Columns[i].Name
-					got := row[i]
-					if expected != got {
-						return fmt.Errorf("validaton failed, column name is wrong, expected: %v, got: %v", expected, got)
-					}
-				}
+		for _, check := range checks.List {
+			err := check.Do(f)
+			if err != nil {
+				return err
 			}
 		}
 	}

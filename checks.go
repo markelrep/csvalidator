@@ -2,21 +2,6 @@ package csvalidator
 
 import "fmt"
 
-type Checker interface {
-	Do(f File) error
-}
-
-type Checks struct {
-	List []Checker
-}
-
-func NewChecks(schema schema) Checks {
-	var list []Checker
-	list = append(list, NewColumnName(schema))
-	list = append(list, NewMissingColumn(schema))
-	return Checks{List: list}
-}
-
 type MissingColumn struct {
 	schema schema
 }

@@ -27,7 +27,7 @@ func NewValidator(path, schemaPath string, firstHeader bool) (Validator, error) 
 }
 
 func (v Validator) Validate() error {
-	checks := NewChecks(v.schema)
+	checks := NewCheck(v.schema)
 	for _, f := range v.files {
 		for _, check := range checks.List {
 			err := check.Do(f)

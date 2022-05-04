@@ -38,7 +38,7 @@ func (cn ColumnName) Do(f File) error {
 				expected := cn.schema.Columns[i].Name
 				got := row[i]
 				if expected != got {
-					return fmt.Errorf("validaton failed, column name is wrong, expected: %v, got: %v", expected, got)
+					return fmt.Errorf("validation failed, column name is wrong, expected: %v, got: %v", expected, got)
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-package csvalidator
+package csv
 
 import (
 	"bytes"
@@ -19,7 +19,7 @@ func removeBOM(records [][]string) {
 	}
 }
 
-func readCSV(filePath string) ([][]string, error) {
+func ReadCSV(filePath string) ([][]string, error) {
 	b, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed read csv file from %v: %w", filePath, err)
@@ -33,7 +33,7 @@ func readCSV(filePath string) ([][]string, error) {
 	return records, nil
 }
 
-func getHeaders(records [][]string) map[string]struct{} {
+func GetHeaders(records [][]string) map[string]struct{} {
 	headers := make(map[string]struct{})
 	for i, row := range records {
 		if i != 0 {
@@ -46,6 +46,6 @@ func getHeaders(records [][]string) map[string]struct{} {
 	return headers
 }
 
-func isCSV(filePath string) bool {
+func IsCSV(filePath string) bool {
 	return path.Ext(filePath) == ".csv"
 }

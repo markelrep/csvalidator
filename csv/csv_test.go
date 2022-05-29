@@ -1,4 +1,4 @@
-package csvalidator
+package csv
 
 import (
 	"encoding/json"
@@ -22,26 +22,26 @@ func TestReadCSV(t *testing.T) {
 		expected [][]string
 	}{
 		{
-			filePath: "./samples/file.csv",
+			filePath: "../samples/file.csv",
 			expected: expected,
 		},
 		{
-			filePath: "./samples/fileWithBOM.csv",
+			filePath: "../samples/fileWithBOM.csv",
 			expected: expected,
 		},
 	}
 
 	for _, tc := range cases {
-		records, err := readCSV(tc.filePath)
+		records, err := ReadCSV(tc.filePath)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, records)
 	}
 }
 
 func TestGetHeaders(t *testing.T) {
-	r, err := readCSV("./samples/file.csv")
+	r, err := ReadCSV("../samples/file.csv")
 	assert.NoError(t, err)
-	headers := getHeaders(r)
+	headers := GetHeaders(r)
 
 	expected := map[string]struct{}{
 		"id":      {},
@@ -61,7 +61,7 @@ func TestIsCSV(t *testing.T) {
 		expected bool
 	}{
 		{
-			path:     "./folder/file.csv",
+			path:     "../folder/file.csv",
 			expected: true,
 		},
 		{
@@ -69,7 +69,7 @@ func TestIsCSV(t *testing.T) {
 			expected: true,
 		},
 		{
-			path:     "./folder/file.txt",
+			path:     "../folder/file.txt",
 			expected: false,
 		},
 		{
@@ -79,6 +79,6 @@ func TestIsCSV(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, tc.expected, isCSV(tc.path))
+		assert.Equal(t, tc.expected, IsCSV(tc.path))
 	}
 }

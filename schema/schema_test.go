@@ -1,16 +1,18 @@
-package csvalidator
+package schema_test
 
 import (
 	"testing"
 
+	"github.com/markelrep/csvalidator/schema"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSchema_ParseSchema(t *testing.T) {
-	s, err := parseSchema("./samples/schema.json")
+func TestSchema_Parse(t *testing.T) {
+	s, err := schema.Parse("../samples/schema.json")
 	assert.NoError(t, err)
-	expected := schema{
-		Columns: []column{
+	expected := schema.Schema{
+		Columns: []schema.Column{
 			{
 				Name:     "id",
 				Required: true,

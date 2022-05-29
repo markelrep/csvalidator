@@ -1,15 +1,19 @@
-package csvalidator
+package files
 
 import (
 	"fmt"
 	"io/fs"
 	"os"
+
+	"github.com/markelrep/csvalidator/csv"
 )
 
 type File struct {
+	filePath      string
 	firstIsHeader bool
 	headers       map[string]struct{}
-	records       [][]string
+	headersLen    int
+	Records       [][]string
 }
 
 type Files []File
@@ -24,18 +28,21 @@ func NewFiles(path string, firstHeader bool) (Files, error) {
 			if d.IsDir() {
 				return nil
 			}
-			fullPath := fmt.Sprintf("%s/%s", path, p)
-			if !isCSV(fullPath) {
+			fullPath := path + "/" + p
+			if !csv.IsCSV(fullPath) {
 				return nil
 			}
-			records, err := readCSV(fullPath)
+			records, err := csv.ReadCSV(fullPath)
 			if err != nil {
 				return err
 			}
+			h := csv.GetHeaders(records)
 			f := File{
+				filePath:      fullPath,
 				firstIsHeader: firstHeader,
-				headers:       getHeaders(records),
-				records:       records,
+				headers:       h,
+				headersLen:    len(h),
+				Records:       records,
 			}
 			files = append(files, f)
 			return nil
@@ -46,17 +53,37 @@ func NewFiles(path string, firstHeader bool) (Files, error) {
 		return files, nil
 	}
 
-	records, err := readCSV(path)
+	records, err := csv.ReadCSV(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed create validator: %w", err)
 	}
+	h := csv.GetHeaders(records)
 	f := File{
+		filePath:      path,
 		firstIsHeader: firstHeader,
-		headers:       getHeaders(records),
-		records:       records,
+		headers:       h,
+		headersLen:    len(h),
+		Records:       records,
 	}
 	files = append(files, f)
 	return files, nil
+}
+
+func (f File) FirstIsHeader() bool {
+	return f.firstIsHeader
+}
+
+func (f File) HeadersCount() int {
+	return f.headersLen
+}
+
+func (f File) HasHeader(name string) bool {
+	_, ok := f.headers[name]
+	return ok
+}
+
+func (f File) Path() string {
+	return f.filePath
 }
 
 func isDir(path string) bool {

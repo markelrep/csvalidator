@@ -15,7 +15,12 @@ func main() {
 		log.Fatalln("schema and path flag are required")
 	}
 
-	validator, err := csvalidator.NewValidator(*path, *schema, true)
+	validator, err := csvalidator.NewValidator(csvalidator.Config{
+		FilePath:       *path,
+		FirstIsHeader:  true,
+		SchemaPath:     *schema,
+		WorkerPoolSize: 0,
+	})
 	if err != nil {
 		log.Fatalln("create validator ", err)
 	}

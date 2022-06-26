@@ -16,16 +16,17 @@ import (
 type Validator struct {
 	schema schema.Schema
 	files  []files.File
+	config Config
 }
 
 // NewValidator create a new Validator
-func NewValidator(path, schemaPath string, firstHeader bool) (Validator, error) {
-	s, err := schema.Parse(schemaPath)
+func NewValidator(config Config) (Validator, error) {
+	s, err := schema.Parse(config.SchemaPath)
 	if err != nil {
 		return Validator{}, fmt.Errorf("failed create validator: %w", err)
 	}
 
-	file, err := files.NewFiles(path, firstHeader)
+	file, err := files.NewFiles(config.FilePath, config.FirstIsHeader)
 	if err != nil {
 		return Validator{}, err
 	}
@@ -33,6 +34,7 @@ func NewValidator(path, schemaPath string, firstHeader bool) (Validator, error) 
 	return Validator{
 		schema: s,
 		files:  file,
+		config: config,
 	}, nil
 }
 
@@ -40,7 +42,7 @@ func NewValidator(path, schemaPath string, firstHeader bool) (Validator, error) 
 // each file check runs concurrently
 // errors return after all files are validated
 func (v *Validator) Validate() error {
-	wp := worker.NewPool(0) // TODO: configurable
+	wp := worker.NewPool(v.config.WorkerPoolSize)
 	checks := checklist.NewChecklist(v.schema)
 
 	for _, f := range v.files {

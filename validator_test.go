@@ -7,7 +7,13 @@ import (
 )
 
 func TestValidator_Validate(t *testing.T) {
-	validator, err := NewValidator("./samples/file.csv", "./samples/schema.json", true)
+
+	validator, err := NewValidator(Config{
+		FilePath:       "./samples/file.csv",
+		FirstIsHeader:  true,
+		SchemaPath:     "./samples/schema.json",
+		WorkerPoolSize: 0,
+	})
 	assert.NoError(t, err)
 	err = validator.Validate()
 	assert.NoError(t, err)
@@ -31,7 +37,12 @@ func TestValidator_NewValidator(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, err := NewValidator(tc.path, tc.schemaPath, tc.firstHeader)
+		_, err := NewValidator(Config{
+			FilePath:       tc.path,
+			FirstIsHeader:  tc.firstHeader,
+			SchemaPath:     tc.schemaPath,
+			WorkerPoolSize: 0,
+		})
 		assert.NoError(t, err)
 	}
 }

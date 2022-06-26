@@ -32,16 +32,16 @@ func TestReadCSV(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		records, err := ReadCSV(tc.filePath)
+		records, _, err := ReadCSV(tc.filePath, false)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, records)
 	}
 }
 
 func TestGetHeaders(t *testing.T) {
-	r, err := ReadCSV("../samples/file.csv")
+	r, _, err := ReadCSV("../samples/file.csv", false)
 	assert.NoError(t, err)
-	headers := GetHeaders(r)
+	headers := getHeaders(r)
 
 	expected := map[string]struct{}{
 		"id":      {},
@@ -79,6 +79,6 @@ func TestIsCSV(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, tc.expected, IsCSV(tc.path))
+		assert.Equal(t, tc.expected, isCSV(tc.path))
 	}
 }

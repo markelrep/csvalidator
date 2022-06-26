@@ -12,11 +12,13 @@ import (
 	"github.com/markelrep/csvalidator/files"
 )
 
+// Validator stores csv files which to be validated and validate rules
 type Validator struct {
 	schema schema.Schema
 	files  []files.File
 }
 
+// NewValidator create a new Validator
 func NewValidator(path, schemaPath string, firstHeader bool) (Validator, error) {
 	s, err := schema.Parse(schemaPath)
 	if err != nil {
@@ -34,6 +36,9 @@ func NewValidator(path, schemaPath string, firstHeader bool) (Validator, error) 
 	}, nil
 }
 
+// Validate checks files and expose errors.
+// each file check runs concurrently
+// errors return after all files are validated
 func (v *Validator) Validate() error {
 	wp := worker.NewPool(0) // TODO: configurable
 	checks := checklist.NewChecklist(v.schema)

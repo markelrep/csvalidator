@@ -9,14 +9,17 @@ import (
 	"github.com/markelrep/csvalidator/files"
 )
 
+// MissingColumn checks that all appropriate columns are presented in a file
 type MissingColumn struct {
 	schema schema.Schema
 }
 
+// NewMissingColumn creates new MissingColumn check
 func NewMissingColumn(schema schema.Schema) MissingColumn {
 	return MissingColumn{schema: schema}
 }
 
+// Do is doing the check of MissingColumn
 func (mc MissingColumn) Do(f files.File) error {
 	missing := make([]string, 0, f.HeadersCount())
 	for _, header := range mc.schema.Columns {
@@ -30,14 +33,17 @@ func (mc MissingColumn) Do(f files.File) error {
 	return nil
 }
 
+// ColumnName checks that all columns have a name which was defined in schema
 type ColumnName struct {
 	schema schema.Schema
 }
 
+// NewColumnName creates a new ColumnName check
 func NewColumnName(schema schema.Schema) ColumnName {
 	return ColumnName{schema: schema}
 }
 
+// Do is doing the check of ColumnName
 func (cn ColumnName) Do(f files.File) error {
 	for i, row := range f.Records {
 		if i == 0 && f.FirstIsHeader() {

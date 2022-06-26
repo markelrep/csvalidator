@@ -8,6 +8,7 @@ import (
 	"github.com/markelrep/csvalidator/csv"
 )
 
+// File represent CSV file
 type File struct {
 	filePath      string
 	firstIsHeader bool
@@ -16,8 +17,10 @@ type File struct {
 	Records       [][]string
 }
 
+// Files slice of File
 type Files []File
 
+// NewFiles create a new Files from path
 func NewFiles(path string, firstHeader bool) (Files, error) {
 	var files Files
 	if isDir(path) {
@@ -29,14 +32,10 @@ func NewFiles(path string, firstHeader bool) (Files, error) {
 				return nil
 			}
 			fullPath := path + "/" + p
-			if !csv.IsCSV(fullPath) {
-				return nil
-			}
-			records, err := csv.ReadCSV(fullPath)
+			records, h, err := csv.ReadCSV(fullPath, firstHeader)
 			if err != nil {
 				return err
 			}
-			h := csv.GetHeaders(records)
 			f := File{
 				filePath:      fullPath,
 				firstIsHeader: firstHeader,
@@ -53,11 +52,10 @@ func NewFiles(path string, firstHeader bool) (Files, error) {
 		return files, nil
 	}
 
-	records, err := csv.ReadCSV(path)
+	records, h, err := csv.ReadCSV(path, firstHeader)
 	if err != nil {
 		return nil, fmt.Errorf("failed create validator: %w", err)
 	}
-	h := csv.GetHeaders(records)
 	f := File{
 		filePath:      path,
 		firstIsHeader: firstHeader,
@@ -69,23 +67,28 @@ func NewFiles(path string, firstHeader bool) (Files, error) {
 	return files, nil
 }
 
+// FirstIsHeader gets information about first line, is it header or not
 func (f File) FirstIsHeader() bool {
 	return f.firstIsHeader
 }
 
+// HeadersCount return len of headers map
 func (f File) HeadersCount() int {
 	return f.headersLen
 }
 
+// HasHeader checks if specific header exists or not
 func (f File) HasHeader(name string) bool {
 	_, ok := f.headers[name]
 	return ok
 }
 
+// Path returns path to file
 func (f File) Path() string {
 	return f.filePath
 }
 
+// isDir helps to recognize dir by path
 func isDir(path string) bool {
 	f, err := os.Open(path)
 	if err != nil {

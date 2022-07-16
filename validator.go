@@ -19,14 +19,14 @@ type Validator struct {
 	config Config
 }
 
-// NewValidator create a new Validator
-func NewValidator(config Config) (Validator, error) {
-	s, err := schema.Parse(config.SchemaPath)
+// NewValidator creates a new Validator
+func NewValidator(pathFiles, pathSchema string, firstIsHeader bool) (Validator, error) {
+	s, err := schema.Parse(pathSchema)
 	if err != nil {
 		return Validator{}, fmt.Errorf("failed create validator: %w", err)
 	}
 
-	file, err := files.NewFiles(config.FilePath, config.FirstIsHeader)
+	file, err := files.NewFiles(pathFiles, firstIsHeader)
 	if err != nil {
 		return Validator{}, err
 	}
@@ -34,8 +34,17 @@ func NewValidator(config Config) (Validator, error) {
 	return Validator{
 		schema: s,
 		files:  file,
-		config: config,
 	}, nil
+}
+
+// NewValidatorWithConfig creates a new Validator with Config
+func NewValidatorWithConfig(config Config) (Validator, error) {
+	validator, err := NewValidator(config.FilePath, config.SchemaPath, config.FirstIsHeader)
+	if err != nil {
+		return Validator{}, err
+	}
+	validator.config = config
+	return validator, nil
 }
 
 // Validate checks files and expose errors.

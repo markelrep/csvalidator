@@ -31,7 +31,12 @@ CSValidator is a tool for validation of .csv files using JSON schema
 
 ### Usage
 ```go
-validator := csvalidator.NewValidator("./path/to/csv/files", "./path/to/json/schema", true)
+validator := csvalidator.NewValidatorWithConfig(csvalidator.Config{
+    FilePath:       "./path/to/csv/files",
+    FirstIsHeader:  true,
+    SchemaPath:     "./path/to/json/schema",
+    WorkerPoolSize: 0,
+})
 if err := validator.Validate(); err != nil {
 	// handle error
 }

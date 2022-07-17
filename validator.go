@@ -1,6 +1,7 @@
 package csvalidator
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
@@ -53,6 +54,9 @@ func NewValidatorWithConfig(config Config) (Validator, error) {
 func (v *Validator) Validate() error {
 	wp := worker.NewPool(v.config.WorkerPoolSize)
 	checks := checklist.NewChecklist(v.schema)
+	if len(checks.List) == 0 {
+		return errors.New("nothing to check")
+	}
 
 	for _, f := range v.files {
 		j := newJob(f, checks)

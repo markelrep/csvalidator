@@ -1,24 +1,31 @@
-package schema_test
+package schema
 
 import (
+	"regexp"
 	"testing"
-
-	"github.com/markelrep/csvalidator/schema"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSchema_Parse(t *testing.T) {
-	s, err := schema.Parse("../samples/schema.json")
+	s, err := Parse("../samples/schema.json")
 	assert.NoError(t, err)
-	expected := schema.Schema{
-		Columns: []schema.Column{
+	expected := Schema{
+		Columns: []column{
 			{
 				Name:     "id",
 				Required: true,
+				Contains: contains{
+					kind:    regexpPattern,
+					pattern: regexp.MustCompile(`^([0-9]{1})$`),
+				},
 			},
 			{
 				Name: "comment",
+				Contains: contains{
+					kind: list,
+					list: map[any]struct{}{"comment": {}},
+				},
 			},
 		},
 	}

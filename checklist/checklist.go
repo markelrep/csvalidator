@@ -19,7 +19,11 @@ type Checklist struct {
 // NewChecklist creates a new Checklist
 func NewChecklist(schema schema.Schema) Checklist {
 	var list []Checker
+	if len(schema.Columns) == 0 {
+		return Checklist{}
+	}
 	list = append(list, NewColumnName(schema))
 	list = append(list, NewMissingColumn(schema))
+	list = append(list, NewColumnContains(schema))
 	return Checklist{List: list}
 }

@@ -2,11 +2,13 @@
   "columns": [
     {
       "name": "id",
-      "required": true
+      "required": true,
+      "contains": "regexp|^([0-9]{1})$"
     },
     {
       "name": "comment",
-      "required": false
+      "required": false,
+      "contains": ["comment"]
     }
   ]
 }

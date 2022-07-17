@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/hashicorp/go-multierror"
+
 	"github.com/markelrep/csvalidator/schema"
 
 	"github.com/markelrep/csvalidator/files"
@@ -28,7 +30,7 @@ func (mc MissingColumn) Do(f files.File) error {
 		}
 	}
 	if len(missing) > 0 {
-		return fmt.Errorf("%s required headers are missing: %v", f.Path(), missing)
+		return fmt.Errorf(ErrHeaderIsMissingTmpl, f.Path(), missing)
 	}
 	return nil
 }
@@ -49,20 +51,51 @@ func (cn ColumnName) Do(f files.File) error {
 		if i == 0 && f.FirstIsHeader() {
 			for i := range row {
 				expected := cn.schema.Columns[i].Name
+				if expected.IsNoOp() {
+					continue
+				}
 				got := row[i]
 				if expected.IsRegexp() {
-					if r, err := regexp.Compile(expected.String()); err == nil {
+					if r, err := regexp.Compile(expected.Regexp()); err == nil {
 						if !r.MatchString(got) {
-							return fmt.Errorf("%s regexp pattern %s doesn't find in %s", f.Path(), r.String(), got)
+							return fmt.Errorf(ErrWrongColumnNameRegexpTmpl, f.Path(), r.String(), got)
 						}
 					}
 					continue
 				}
 				if expected.String() != got {
-					return fmt.Errorf("%s column name is wrong, expected: %v, got: %v", f.Path(), expected, got)
+					return fmt.Errorf(ErrWrongColumnNameExactTmpl, f.Path(), expected, got)
 				}
 			}
 		}
 	}
 	return nil
+}
+
+type ColumnContains struct {
+	schema schema.Schema
+}
+
+func NewColumnContains(schema schema.Schema) ColumnContains {
+	return ColumnContains{schema: schema}
+}
+
+func (cc ColumnContains) Do(f files.File) (err error) {
+	for i, row := range f.Records {
+		if i == 0 && f.FirstIsHeader() {
+			continue
+		}
+		for j, record := range row {
+			contains := cc.schema.Columns[j].Contains
+			if contains.IsNoOp() {
+				continue
+			}
+			if !contains.Contain(record) { // TODO: maybe need to return error here instead of bool
+				err = multierror.Append(err,
+					fmt.Errorf(ErrUnexpectedDataInCellTmpl, f.Path(), i+1, j+1, cc.schema.Columns[j].Name, record),
+				)
+			}
+		}
+	}
+	return err
 }

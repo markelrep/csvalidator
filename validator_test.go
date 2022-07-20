@@ -8,7 +8,7 @@ import (
 
 func TestValidator_Validate(t *testing.T) {
 
-	validator, err := NewValidatorWithConfig(Config{
+	validator, err := NewValidator(Config{
 		FilePath:       "./samples/file.csv",
 		FirstIsHeader:  true,
 		SchemaPath:     "./samples/schema.json",
@@ -37,7 +37,7 @@ func TestValidator_NewValidator(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, err := NewValidatorWithConfig(Config{
+		_, err := NewValidator(Config{
 			FilePath:       tc.path,
 			FirstIsHeader:  tc.firstHeader,
 			SchemaPath:     tc.schemaPath,

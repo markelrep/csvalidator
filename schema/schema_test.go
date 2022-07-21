@@ -15,16 +15,14 @@ func TestSchema_Parse(t *testing.T) {
 			{
 				Name:     "id",
 				Required: true,
-				Contains: contains{
-					kind:    regexpPattern,
+				RecordRegexp: contains{
 					pattern: regexp.MustCompile(`^([0-9]{1})$`),
 				},
 			},
 			{
 				Name: "comment",
-				Contains: contains{
-					kind: list,
-					list: map[any]struct{}{"comment": {}},
+				RecordRegexp: contains{
+					pattern: regexp.MustCompile(`^comment$`),
 				},
 			},
 		},

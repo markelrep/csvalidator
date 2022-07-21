@@ -10,10 +10,10 @@ const regexpPref = "regexp|"
 
 // column contains all appropriate data which will be needed to validate column in csv
 type column struct {
-	Name     name     `json:"name"`
-	DataType string   `json:"dataType"`
-	Required bool     `json:"required"`
-	Contains contains `json:"contains"`
+	Name         name     `json:"name"`
+	DataType     string   `json:"dataType"`
+	Required     bool     `json:"required"`
+	RecordRegexp contains `json:"record_regexp"`
 }
 
 // Schema contains suite of information by which file validates

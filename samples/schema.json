@@ -3,12 +3,12 @@
     {
       "name": "id",
       "required": true,
-      "contains": "regexp|^([0-9]{1})$"
+      "record_regexp": "^([0-9]{1})$"
     },
     {
       "name": "comment",
       "required": false,
-      "contains": ["comment"]
+      "record_regexp": "^comment$"
     }
   ]
 }

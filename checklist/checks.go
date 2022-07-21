@@ -86,7 +86,7 @@ func (cc ColumnContains) Do(f files.File) (err error) {
 			continue
 		}
 		for j, record := range row {
-			contains := cc.schema.Columns[j].Contains
+			contains := cc.schema.Columns[j].RecordRegexp
 			if contains.IsNoOp() {
 				continue
 			}

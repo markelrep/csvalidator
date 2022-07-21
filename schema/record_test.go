@@ -10,53 +10,53 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestContains_UnmarshalJSON(t *testing.T) {
+func TestRecordRegexp_UnmarshalJSON(t *testing.T) {
 	cases := []struct {
 		field    string
-		expected contains
+		expected recordRegexp
 	}{
 		{
 			field:    `null`,
-			expected: contains{},
+			expected: recordRegexp{},
 		},
 		{
 			field: `"^pattern$"`,
-			expected: contains{
+			expected: recordRegexp{
 				pattern: regexp.MustCompile(`^pattern$`),
 			},
 		},
 		{
 			field: `""`,
-			expected: contains{
+			expected: recordRegexp{
 				pattern: regexp.MustCompile(""),
 			},
 		},
 	}
 
 	for _, tc := range cases {
-		var c contains
+		var c recordRegexp
 		err := json.Unmarshal([]byte(tc.field), &c)
 		require.NoError(t, err)
 		assert.Equal(t, tc.expected, c)
 	}
 }
 
-func TestContains_Contain(t *testing.T) {
+func TestRecordRegexp_Contain(t *testing.T) {
 	cases := []struct {
 		value    string
-		contains contains
+		record   recordRegexp
 		expected bool
 	}{
 		{
 			value: "value1",
-			contains: contains{
+			record: recordRegexp{
 				pattern: regexp.MustCompile(`^value1$`),
 			},
 			expected: true,
 		},
 		{
 			value: "value2",
-			contains: contains{
+			record: recordRegexp{
 				pattern: regexp.MustCompile(`^value1$`),
 			},
 			expected: false,
@@ -64,6 +64,26 @@ func TestContains_Contain(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, tc.expected, tc.contains.Contain(tc.value))
+		assert.Equal(t, tc.expected, tc.record.Contain(tc.value))
+	}
+}
+
+func TestRecordRegexp_IsNoOp(t *testing.T) {
+	cases := []struct {
+		record   recordRegexp
+		expected bool
+	}{
+		{
+			record:   recordRegexp{pattern: regexp.MustCompile("")},
+			expected: false,
+		},
+		{
+			record:   recordRegexp{},
+			expected: true,
+		},
+	}
+
+	for _, tc := range cases {
+		assert.Equal(t, tc.expected, tc.record.IsNoOp())
 	}
 }

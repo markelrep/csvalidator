@@ -64,7 +64,7 @@ func TestRecordRegexp_Contain(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, tc.expected, tc.record.Contain(tc.value))
+		assert.Equal(t, tc.expected, tc.record.Match(tc.value))
 	}
 }
 

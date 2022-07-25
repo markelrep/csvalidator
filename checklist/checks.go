@@ -86,11 +86,11 @@ func (cc ColumnContains) Do(f files.File) (err error) {
 			continue
 		}
 		for j, record := range row {
-			contains := cc.schema.Columns[j].RecordRegexp
-			if contains.IsNoOp() {
+			regexpPattern := cc.schema.Columns[j].RecordRegexp
+			if regexpPattern.IsNoOp() {
 				continue
 			}
-			if !contains.Contain(record) { // TODO: maybe need to return error here instead of bool
+			if !regexpPattern.Match(record) {
 				err = multierror.Append(err,
 					fmt.Errorf(ErrUnexpectedDataInCellTmpl, f.Path(), i+1, j+1, cc.schema.Columns[j].Name, record),
 				)

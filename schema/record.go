@@ -26,8 +26,8 @@ func (r *recordRegexp) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Contain is checking that the value from cell is meet validation rules from schema
-func (r recordRegexp) Contain(value string) bool {
+// Match is checking that the value from cell is meet validation rules from schema
+func (r recordRegexp) Match(value string) bool {
 	return r.pattern.MatchString(value)
 }
 

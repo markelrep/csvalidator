@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/google/uuid"
+
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/markelrep/csvalidator/schema"
@@ -72,15 +74,15 @@ func (cn ColumnName) Do(f files.File) error {
 	return nil
 }
 
-type ColumnContains struct {
+type ColumnRegexpMatch struct {
 	schema schema.Schema
 }
 
-func NewColumnContains(schema schema.Schema) ColumnContains {
-	return ColumnContains{schema: schema}
+func NewColumnRegexpMatch(schema schema.Schema) ColumnRegexpMatch {
+	return ColumnRegexpMatch{schema: schema}
 }
 
-func (cc ColumnContains) Do(f files.File) (err error) {
+func (cc ColumnRegexpMatch) Do(f files.File) (err error) {
 	for i, row := range f.Records {
 		if i == 0 && f.FirstIsHeader() {
 			continue
@@ -95,6 +97,48 @@ func (cc ColumnContains) Do(f files.File) (err error) {
 					fmt.Errorf(ErrUnexpectedDataInCellTmpl, f.Path(), i+1, j+1, cc.schema.Columns[j].Name, record),
 				)
 			}
+		}
+	}
+	return err
+}
+
+type ColumnExactContain struct {
+	schema schema.Schema
+}
+
+func NewColumnExactContain(schema schema.Schema) ColumnExactContain {
+	return ColumnExactContain{schema: schema}
+}
+
+func (c ColumnExactContain) Do(f files.File) (err error) {
+	data := make(map[string]map[string]struct{}) // todo: two same columns
+	indexes := make(map[int]string)
+
+	for i := 0; i < len(f.Records[0]); i++ {
+		if c.schema.Columns[i].Contains.IsNoOp() {
+			continue
+		}
+		id := uuid.NewString()
+		indexes[i] = id
+		data[id] = map[string]struct{}{}
+	}
+
+	for i, row := range f.Records {
+		if f.FirstIsHeader() && i == 0 {
+			continue
+		}
+		for j, cell := range row {
+			column := c.schema.Columns[j]
+			if column.Contains.IsNoOp() {
+				continue
+			}
+			data[indexes[j]][cell] = struct{}{}
+		}
+	}
+	for index, key := range indexes {
+		e := c.schema.Columns[index].Contains.Contain(data[key])
+		if e != nil {
+			err = multierror.Append(err, multierror.Prefix(e, f.Path()))
 		}
 	}
 	return err

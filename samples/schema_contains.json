@@ -1,0 +1,18 @@
+{
+  "columns": [
+    {
+      "name": "id",
+      "required": true
+    },
+    {
+      "name": "type",
+      "required": false,
+      "contains": ["foo", "bar", "foobar", "some value"]
+    },
+    {
+      "name": "column",
+      "required": false,
+      "contains": ["value1", "value2", "value3", "value4"]
+    }
+  ]
+}

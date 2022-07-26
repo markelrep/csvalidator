@@ -19,7 +19,7 @@ func (c contains) Contain(values map[string]struct{}) (err error) {
 		}
 	}
 
-	for v, _ := range values {
+	for v := range values {
 		_, ok := containMap[v]
 		if !ok {
 			err = multierror.Append(err, fmt.Errorf("%s is not defined in schema, but exist in column", v))
@@ -29,5 +29,5 @@ func (c contains) Contain(values map[string]struct{}) (err error) {
 }
 
 func (c contains) IsNoOp() bool {
-	return c == nil || len(c) == 0
+	return len(c) == 0
 }

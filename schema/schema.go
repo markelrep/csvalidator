@@ -14,6 +14,7 @@ type column struct {
 	DataType     string       `json:"dataType"`
 	Required     bool         `json:"required"`
 	RecordRegexp recordRegexp `json:"record_regexp"`
+	Contains     contains     `json:"contains"`
 }
 
 // Schema recordRegexp suite of information by which file validates

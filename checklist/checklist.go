@@ -24,6 +24,7 @@ func NewChecklist(schema schema.Schema) Checklist {
 	}
 	list = append(list, NewColumnName(schema))
 	list = append(list, NewMissingColumn(schema))
-	list = append(list, NewColumnContains(schema))
+	list = append(list, NewColumnRegexpMatch(schema))
+	list = append(list, NewColumnExactContain(schema))
 	return Checklist{List: list}
 }

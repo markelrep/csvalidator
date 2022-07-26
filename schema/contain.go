@@ -27,3 +27,7 @@ func (c contains) Contain(values map[string]struct{}) (err error) {
 	}
 	return err
 }
+
+func (c contains) IsNoOp() bool {
+	return c == nil || len(c) == 0
+}

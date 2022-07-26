@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/markelrep/csvalidator/schema"
@@ -84,7 +86,7 @@ func TestColumnName_Do(t *testing.T) {
 	}
 }
 
-func TestNewColumnContains_Do(t *testing.T) {
+func TestColumnRegexpMatch_Do(t *testing.T) {
 	cases := []struct {
 		filePath    string
 		schemaPath  string
@@ -115,8 +117,45 @@ func TestNewColumnContains_Do(t *testing.T) {
 		f := file[0]
 		s, err := schema.Parse(tc.schemaPath)
 		assert.NoError(t, err)
-		check := NewColumnContains(s)
+		check := NewColumnRegexpMatch(s)
 		err = check.Do(f)
 		assert.Equal(t, tc.expectedErr(), err)
+	}
+}
+
+func TestColumnExactContain(t *testing.T) {
+	// TODO: this test can suddenly fail, because of map is using under `contains` therefore error order is not constant
+	cases := []struct {
+		filePath   string
+		schemaPath string
+		expected   func() error
+	}{
+		{
+			filePath:   "../samples/file_contains.csv",
+			schemaPath: "../samples/schema_contains.json",
+			expected: func() error {
+				return nil
+			},
+		},
+		{
+			filePath:   "../samples/file_contains_err.csv",
+			schemaPath: "../samples/schema_contains.json",
+			expected: func() (err error) {
+				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("some value is defined in schema, but absent in column"), "../samples/file_contains_err.csv"))
+				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("value4 is defined in schema, but absent in column"), "../samples/file_contains_err.csv"))
+				return err
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		file, err := files.NewFiles(tc.filePath, true)
+		require.NoError(t, err)
+		f := file[0]
+		s, err := schema.Parse(tc.schemaPath)
+		require.NoError(t, err)
+		check := NewColumnExactContain(s)
+		err = check.Do(f)
+		assert.Equal(t, tc.expected(), err)
 	}
 }

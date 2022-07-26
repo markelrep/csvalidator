@@ -10,6 +10,7 @@ import (
 )
 
 func TestContains_Contain(t *testing.T) {
+	// TODO: this test can suddenly fail, because of map is using under `contains` therefore error order is not constant
 	cases := []struct {
 		values   map[string]struct{}
 		contains contains
@@ -69,5 +70,29 @@ func TestContains_Contain(t *testing.T) {
 
 	for _, tc := range cases {
 		assert.Equal(t, tc.expected(), tc.contains.Contain(tc.values))
+	}
+}
+
+func TestContains_IsNoOp(t *testing.T) {
+	cases := []struct {
+		contains contains
+		expected bool
+	}{
+		{
+			contains: nil,
+			expected: true,
+		},
+		{
+			contains: contains{},
+			expected: true,
+		},
+		{
+			contains: contains{"somevalue"},
+			expected: false,
+		},
+	}
+
+	for _, tc := range cases {
+		assert.Equal(t, tc.expected, tc.contains.IsNoOp())
 	}
 }

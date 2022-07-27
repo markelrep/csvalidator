@@ -10,10 +10,10 @@ import (
 )
 
 func TestContains_Contain(t *testing.T) {
-	// TODO: this test can suddenly fail, because of map is using under `contains` therefore error order is not constant
+	// TODO: this test can suddenly fail, because of map is using under `exactContain` therefore error order is not constant
 	cases := []struct {
 		values   map[string]struct{}
-		contains contains
+		contains exactContain
 		expected func() error
 	}{
 		{
@@ -23,7 +23,7 @@ func TestContains_Contain(t *testing.T) {
 				"value3": {},
 				"value4": {},
 			},
-			contains: contains{"value1", "value2", "value3", "value4"},
+			contains: exactContain{"value1", "value2", "value3", "value4"},
 			expected: func() error {
 				return nil
 			},
@@ -34,7 +34,7 @@ func TestContains_Contain(t *testing.T) {
 				"value2": {},
 				"value3": {},
 			},
-			contains: contains{"value1", "value2", "value3", "value4"},
+			contains: exactContain{"value1", "value2", "value3", "value4"},
 			expected: func() (err error) {
 				err = multierror.Append(err, fmt.Errorf("value4 is defined in schema, but absent in column"))
 				return err
@@ -47,7 +47,7 @@ func TestContains_Contain(t *testing.T) {
 				"value3": {},
 				"value4": {},
 			},
-			contains: contains{"value1", "value2", "value5", "value3", "value4"},
+			contains: exactContain{"value1", "value2", "value5", "value3", "value4"},
 			expected: func() (err error) {
 				err = multierror.Append(err, fmt.Errorf("value5 is defined in schema, but absent in column"))
 				return err
@@ -59,7 +59,7 @@ func TestContains_Contain(t *testing.T) {
 				"value2": {},
 				"value3": {},
 			},
-			contains: contains{"value2", "value3", "value4"},
+			contains: exactContain{"value2", "value3", "value4"},
 			expected: func() (err error) {
 				err = multierror.Append(err, fmt.Errorf("value4 is defined in schema, but absent in column"))
 				err = multierror.Append(err, fmt.Errorf("value1 is not defined in schema, but exist in column"))
@@ -75,7 +75,7 @@ func TestContains_Contain(t *testing.T) {
 
 func TestContains_IsNoOp(t *testing.T) {
 	cases := []struct {
-		contains contains
+		contains exactContain
 		expected bool
 	}{
 		{
@@ -83,11 +83,11 @@ func TestContains_IsNoOp(t *testing.T) {
 			expected: true,
 		},
 		{
-			contains: contains{},
+			contains: exactContain{},
 			expected: true,
 		},
 		{
-			contains: contains{"somevalue"},
+			contains: exactContain{"somevalue"},
 			expected: false,
 		},
 	}

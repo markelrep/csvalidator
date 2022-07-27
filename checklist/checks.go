@@ -115,7 +115,7 @@ func (c ColumnExactContain) Do(f files.File) (err error) {
 	indexes := make(map[int]string)
 
 	for i := 0; i < len(f.Records[0]); i++ {
-		if c.schema.Columns[i].Contains.IsNoOp() {
+		if c.schema.Columns[i].ExactContain.IsNoOp() {
 			continue
 		}
 		id := uuid.NewString()
@@ -129,14 +129,14 @@ func (c ColumnExactContain) Do(f files.File) (err error) {
 		}
 		for j, cell := range row {
 			column := c.schema.Columns[j]
-			if column.Contains.IsNoOp() {
+			if column.ExactContain.IsNoOp() {
 				continue
 			}
 			data[indexes[j]][cell] = struct{}{}
 		}
 	}
 	for index, key := range indexes {
-		e := c.schema.Columns[index].Contains.Contain(data[key])
+		e := c.schema.Columns[index].ExactContain.Contain(data[key])
 		if e != nil {
 			err = multierror.Append(err, multierror.Prefix(e, f.Path()))
 		}

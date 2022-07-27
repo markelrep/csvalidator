@@ -24,7 +24,7 @@ func TestSchema_Parse(t *testing.T) {
 				RecordRegexp: recordRegexp{
 					pattern: regexp.MustCompile(`^comment$`),
 				},
-				Contains: contains{"comment"},
+				ExactContain: exactContain{"comment"},
 			},
 		},
 	}

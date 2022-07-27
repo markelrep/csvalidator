@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
-type contains []string
+type exactContain []string
 
-func (c contains) Contain(values map[string]struct{}) (err error) {
+func (c exactContain) Contain(values map[string]struct{}) (err error) {
 	containMap := make(map[string]struct{})
 
 	for _, contain := range c {
@@ -28,6 +28,6 @@ func (c contains) Contain(values map[string]struct{}) (err error) {
 	return err
 }
 
-func (c contains) IsNoOp() bool {
+func (c exactContain) IsNoOp() bool {
 	return len(c) == 0
 }

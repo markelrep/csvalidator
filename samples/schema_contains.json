@@ -7,12 +7,12 @@
     {
       "name": "type",
       "required": false,
-      "contains": ["foo", "bar", "foobar", "some value"]
+      "exactContain": ["foo", "bar", "foobar", "some value"]
     },
     {
       "name": "column",
       "required": false,
-      "contains": ["value1", "value2", "value3", "value4"]
+      "exactContain": ["value1", "value2", "value3", "value4"]
     }
   ]
 }

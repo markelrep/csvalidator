@@ -9,7 +9,7 @@
       "name": "comment",
       "required": false,
       "record_regexp": "^comment$",
-      "contains": ["comment"]
+      "exactContain": ["comment"]
     }
   ]
 }

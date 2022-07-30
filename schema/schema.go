@@ -8,10 +8,11 @@ import (
 
 const regexpPref = "regexp|"
 
+type Columns map[int]column
+
 // column recordRegexp all appropriate data which will be needed to validate column in csv
 type column struct {
 	Name         name         `json:"name"`
-	DataType     string       `json:"dataType"`
 	Required     bool         `json:"required"`
 	RecordRegexp recordRegexp `json:"record_regexp"`
 	ExactContain exactContain `json:"exactContain"`
@@ -19,7 +20,7 @@ type column struct {
 
 // Schema recordRegexp suite of information by which file validates
 type Schema struct {
-	Columns []column `json:"columns"`
+	Columns Columns `json:"columns"`
 }
 
 func Parse(schemaPath string) (Schema, error) {

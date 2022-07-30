@@ -10,6 +10,10 @@
       "required": false,
       "record_regexp": "^comment$",
       "exactContain": ["comment"]
+    },
+    "2": {
+      "name": "regexp|^type$",
+      "required": true
     }
   }
 }

@@ -8,23 +8,27 @@ import (
 )
 
 func TestSchema_Parse(t *testing.T) {
-	s, err := Parse("../samples/schema.json")
+	s, err := Parse("../samples/schema_type.json")
 	assert.NoError(t, err)
 	expected := Schema{
-		Columns: []column{
-			{
+		Columns: map[int]column{
+			0: {
 				Name:     "id",
 				Required: true,
 				RecordRegexp: recordRegexp{
 					pattern: regexp.MustCompile(`^([0-9]{1})$`),
 				},
 			},
-			{
+			1: {
 				Name: "comment",
 				RecordRegexp: recordRegexp{
 					pattern: regexp.MustCompile(`^comment$`),
 				},
 				ExactContain: exactContain{"comment"},
+			},
+			2: {
+				Name:     "regexp|^type$",
+				Required: true,
 			},
 		},
 	}

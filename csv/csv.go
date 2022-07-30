@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"io"
 	"os"
 	"path"
 )
@@ -59,4 +60,8 @@ func getHeaders(records [][]string) map[string]struct{} {
 // isCSV makes sure file is CSV
 func isCSV(filePath string) bool {
 	return path.Ext(filePath) == ".csv"
+}
+
+func NewReader(r io.Reader) *csv.Reader {
+	return csv.NewReader(r)
 }

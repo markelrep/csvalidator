@@ -24,7 +24,7 @@ func NewMissingColumn(schema schema.Schema) MissingColumn {
 }
 
 // Do is doing the check of MissingColumn
-func (mc MissingColumn) Do(f files.File) error {
+func (mc MissingColumn) Do(f *files.File) error {
 	missing := make([]string, 0, f.HeadersCount())
 	for _, header := range mc.schema.Columns {
 		if !f.HasHeader(header.Name.String()) && header.Required {
@@ -48,27 +48,22 @@ func NewColumnName(schema schema.Schema) ColumnName {
 }
 
 // Do is doing the check of ColumnName
-func (cn ColumnName) Do(f files.File) error {
-	for i, row := range f.Records {
-		if i == 0 && f.FirstIsHeader() {
-			for i := range row {
-				expected := cn.schema.Columns[i].Name
-				if expected.IsNoOp() {
-					continue
-				}
-				got := row[i]
-				if expected.IsRegexp() {
-					if r, err := regexp.Compile(expected.Regexp()); err == nil {
-						if !r.MatchString(got) {
-							return fmt.Errorf(ErrWrongColumnNameRegexpTmpl, f.Path(), r.String(), got)
-						}
-					}
-					continue
-				}
-				if expected.String() != got {
-					return fmt.Errorf(ErrWrongColumnNameExactTmpl, f.Path(), expected, got)
+func (cn ColumnName) Do(f *files.File) error {
+	for i, got := range f.Headers() {
+		expected := cn.schema.Columns[i].Name
+		if expected.IsNoOp() {
+			continue
+		}
+		if expected.IsRegexp() {
+			if r, err := regexp.Compile(expected.Regexp()); err == nil {
+				if !r.MatchString(got) {
+					return fmt.Errorf(ErrWrongColumnNameRegexpTmpl, f.Path(), r.String(), got)
 				}
 			}
+			continue
+		}
+		if expected.String() != got {
+			return fmt.Errorf(ErrWrongColumnNameExactTmpl, f.Path(), expected, got)
 		}
 	}
 	return nil
@@ -82,19 +77,16 @@ func NewColumnRegexpMatch(schema schema.Schema) ColumnRegexpMatch {
 	return ColumnRegexpMatch{schema: schema}
 }
 
-func (cc ColumnRegexpMatch) Do(f files.File) (err error) {
-	for i, row := range f.Records {
-		if i == 0 && f.FirstIsHeader() {
-			continue
-		}
-		for j, record := range row {
+func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
+	for row := range f.Stream() {
+		for j, record := range row.Data {
 			regexpPattern := cc.schema.Columns[j].RecordRegexp
 			if regexpPattern.IsNoOp() {
 				continue
 			}
 			if !regexpPattern.Match(record) {
 				err = multierror.Append(err,
-					fmt.Errorf(ErrUnexpectedDataInCellTmpl, f.Path(), i+1, j+1, cc.schema.Columns[j].Name, record),
+					fmt.Errorf(ErrUnexpectedDataInCellTmpl, f.Path(), row.Index+1, j+1, cc.schema.Columns[j].Name, record),
 				)
 			}
 		}
@@ -110,24 +102,22 @@ func NewColumnExactContain(schema schema.Schema) ColumnExactContain {
 	return ColumnExactContain{schema: schema}
 }
 
-func (c ColumnExactContain) Do(f files.File) (err error) {
+func (c ColumnExactContain) Do(f *files.File) (err error) {
 	data := make(map[string]map[string]struct{}) // todo: two same columns
 	indexes := make(map[int]string)
 
-	for i := 0; i < len(f.Records[0]); i++ {
-		if c.schema.Columns[i].ExactContain.IsNoOp() {
-			continue
+	for row := range f.Stream() {
+		if row.Index == 1 {
+			for i := 0; i < len(row.Data); i++ {
+				if c.schema.Columns[i].ExactContain.IsNoOp() {
+					continue
+				}
+				id := uuid.NewString()
+				indexes[i] = id
+				data[id] = map[string]struct{}{}
+			}
 		}
-		id := uuid.NewString()
-		indexes[i] = id
-		data[id] = map[string]struct{}{}
-	}
-
-	for i, row := range f.Records {
-		if f.FirstIsHeader() && i == 0 {
-			continue
-		}
-		for j, cell := range row {
+		for j, cell := range row.Data {
 			column := c.schema.Columns[j]
 			if column.ExactContain.IsNoOp() {
 				continue

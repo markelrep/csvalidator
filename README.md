@@ -11,16 +11,16 @@ CSValidator is a tool for validation of .csv files using JSON schema
 
 ```json
 {
-  "columns": [
-    {
+  "columns": {
+    "0": {
       "name": "id",
       "required": true
     },
-    {
+    "1": {
       "name": "comment",
       "required": false
-    }
-  ]
+    } 
+  }
 }
 ```
 `columns` is array of objects with validation rules for each columns in .csv file

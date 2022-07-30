@@ -26,9 +26,21 @@ func NewMissingColumn(schema schema.Schema) MissingColumn {
 // Do is doing the check of MissingColumn
 func (mc MissingColumn) Do(f *files.File) error {
 	missing := make([]string, 0, f.HeadersCount())
-	for _, header := range mc.schema.Columns {
-		if !f.HasHeader(header.Name.String()) && header.Required {
-			missing = append(missing, header.Name.String())
+	for i, column := range mc.schema.Columns {
+		if column.Required {
+			if !column.Name.IsRegexp() {
+				if !f.HasHeader(column.Name.String()) {
+					missing = append(missing, column.Name.String())
+				}
+				continue
+			}
+			if f.HeadersCount() >= i {
+				missing = append(missing, column.Name.String())
+				continue
+			}
+			if ok, _ := regexp.Match(column.Name.Regexp(), []byte(f.Headers()[i])); !ok {
+				missing = append(missing, column.Name.String())
+			}
 		}
 	}
 	if len(missing) > 0 {
@@ -50,7 +62,11 @@ func NewColumnName(schema schema.Schema) ColumnName {
 // Do is doing the check of ColumnName
 func (cn ColumnName) Do(f *files.File) error {
 	for i, got := range f.Headers() {
-		expected := cn.schema.Columns[i].Name
+		column, ok := cn.schema.Columns[i]
+		if !ok {
+			return fmt.Errorf(ErrColumnNameAbsentSchemaTmpl, f.Path(), got)
+		}
+		expected := column.Name
 		if expected.IsNoOp() {
 			continue
 		}
@@ -80,7 +96,11 @@ func NewColumnRegexpMatch(schema schema.Schema) ColumnRegexpMatch {
 func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
 	for row := range f.Stream() {
 		for j, record := range row.Data {
-			regexpPattern := cc.schema.Columns[j].RecordRegexp
+			column, ok := cc.schema.Columns[j]
+			if !ok {
+				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, f.Path(), j+1))
+			}
+			regexpPattern := column.RecordRegexp
 			if regexpPattern.IsNoOp() {
 				continue
 			}
@@ -118,7 +138,11 @@ func (c ColumnExactContain) Do(f *files.File) (err error) {
 			}
 		}
 		for j, cell := range row.Data {
-			column := c.schema.Columns[j]
+			column, ok := c.schema.Columns[j]
+			if !ok {
+				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, f.Path(), j+1))
+				continue
+			}
 			if column.ExactContain.IsNoOp() {
 				continue
 			}

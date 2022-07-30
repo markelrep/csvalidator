@@ -16,7 +16,7 @@ import (
 // Validator stores csv files which to be validated and validate rules
 type Validator struct {
 	schema schema.Schema
-	files  []files.File
+	files  files.Files
 	config Config
 }
 
@@ -62,11 +62,11 @@ func (v *Validator) Validate() error {
 }
 
 type job struct {
-	file   files.File
+	file   *files.File
 	checks checklist.Checklist
 }
 
-func newJob(file files.File, checks checklist.Checklist) job {
+func newJob(file *files.File, checks checklist.Checklist) job {
 	return job{
 		file:   file,
 		checks: checks,

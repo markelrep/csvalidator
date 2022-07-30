@@ -8,7 +8,7 @@ import (
 // Checker is common interface which should implement each check in checklist
 type Checker interface {
 	// Do is doing check of file
-	Do(f files.File) error
+	Do(f *files.File) error
 }
 
 // Checklist is list of checks which should be applied to the file

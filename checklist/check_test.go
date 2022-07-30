@@ -18,16 +18,19 @@ import (
 
 func TestMissingColumns_Do(t *testing.T) {
 	cases := []struct {
+		name        string
 		filePath    string
 		schemaPath  string
 		expectedErr error
 	}{
 		{
+			name:        "success",
 			filePath:    "../samples/file.csv",
 			schemaPath:  "../samples/schema.json",
 			expectedErr: nil,
 		},
 		{
+			name:        "error",
 			filePath:    "../samples/fileOneColumn.csv",
 			schemaPath:  "../samples/schema.json",
 			expectedErr: errors.New("../samples/fileOneColumn.csv required headers are missing: [id]"),
@@ -35,14 +38,16 @@ func TestMissingColumns_Do(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		file, err := files.NewFiles(tc.filePath, true)
-		assert.NoError(t, err)
-		f := file[0]
-		s, err := schema.Parse(tc.schemaPath)
-		assert.NoError(t, err)
-		check := NewMissingColumn(s)
-		err = check.Do(f)
-		assert.Equal(t, tc.expectedErr, err)
+		t.Run(tc.name, func(t *testing.T) {
+			file, err := files.NewFiles(tc.filePath, true)
+			assert.NoError(t, err)
+			f := file[0]
+			s, err := schema.Parse(tc.schemaPath)
+			assert.NoError(t, err)
+			check := NewMissingColumn(s)
+			err = check.Do(f)
+			assert.Equal(t, tc.expectedErr, err)
+		})
 	}
 }
 

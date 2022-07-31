@@ -5,10 +5,12 @@ import "strings"
 // name is column name in json schema
 type name string
 
+// String representation of name
 func (n name) String() string {
 	return string(n)
 }
 
+// Regexp returns regular expression
 func (n name) Regexp() string {
 	if n.IsRegexp() {
 		return strings.TrimPrefix(n.String(), regexpPref)

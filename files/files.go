@@ -1,14 +1,12 @@
 package files
 
 import (
-	stdcsv "encoding/csv"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"io/fs"
 	"log"
 	"os"
-
-	"github.com/markelrep/csvalidator/csv"
 )
 
 // File represent CSV file
@@ -43,7 +41,7 @@ func NewFile(path string, config Config) (*File, error) {
 	headersMap := make(map[string]struct{})
 	if config.FirstIsHeader {
 		line, err := csvReader.Read()
-		csv.RemoveBOM(line)
+		removeBOM(line)
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +65,7 @@ func NewFile(path string, config Config) (*File, error) {
 	return fileStream, nil
 }
 
-func (f *File) run(reader *stdcsv.Reader) {
+func (f *File) run(reader *csv.Reader) {
 	var line int
 	for {
 		data, err := reader.Read()
@@ -84,7 +82,7 @@ func (f *File) run(reader *stdcsv.Reader) {
 			line++
 		}
 		if !f.config.FirstIsHeader && line == 0 {
-			csv.RemoveBOM(data)
+			removeBOM(data)
 		}
 		f.stream <- Row{Data: data, Index: line}
 		line++

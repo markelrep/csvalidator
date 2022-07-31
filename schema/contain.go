@@ -6,8 +6,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// exactContain represent slice of values which should be contained in column
 type exactContain []string
 
+// Contain checks that column contains values from schema and vice versa
 func (c exactContain) Contain(values map[string]struct{}) (err error) {
 	containMap := make(map[string]struct{})
 
@@ -28,6 +30,7 @@ func (c exactContain) Contain(values map[string]struct{}) (err error) {
 	return err
 }
 
+// IsNoOp return true if check is absent in schema
 func (c exactContain) IsNoOp() bool {
 	return len(c) == 0
 }

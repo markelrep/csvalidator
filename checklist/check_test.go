@@ -62,37 +62,49 @@ func TestColumnName_Do(t *testing.T) {
 		name        string
 		filePath    string
 		schemaPath  string
-		expectedErr error
+		expectedErr func() (err error)
 	}{
 		{
-			name:        "success case common name",
-			filePath:    "../samples/file.csv",
-			schemaPath:  "../samples/schema.json",
-			expectedErr: nil,
+			name:       "success case common name",
+			filePath:   "../samples/file.csv",
+			schemaPath: "../samples/schema.json",
+			expectedErr: func() (err error) {
+				return nil
+			},
 		},
 		{
-			name:        "bad common column name",
-			filePath:    "../samples/fileBadColumnName.csv",
-			schemaPath:  "../samples/schema.json",
-			expectedErr: errors.New("../samples/fileBadColumnName.csv column name is wrong, expected: comment, got: comments"),
+			name:       "bad common column name",
+			filePath:   "../samples/fileBadColumnName.csv",
+			schemaPath: "../samples/schema.json",
+			expectedErr: func() (err error) {
+				err = multierror.Append(err, errors.New("../samples/fileBadColumnName.csv column name is wrong, expected: comment, got: comments"))
+				return err
+			},
 		},
 		{
-			name:        "success case regexp name",
-			filePath:    "../samples/file.csv",
-			schemaPath:  "../samples/schema_regexp.json",
-			expectedErr: nil,
+			name:       "success case regexp name",
+			filePath:   "../samples/file.csv",
+			schemaPath: "../samples/schema_regexp.json",
+			expectedErr: func() (err error) {
+				return nil
+			},
 		},
 		{
-			name:        "bad regexp column name",
-			filePath:    "../samples/fileBadColumnName.csv",
-			schemaPath:  "../samples/schema_regexp.json",
-			expectedErr: errors.New("../samples/fileBadColumnName.csv regexp pattern ^comment$ doesn't find in comments"),
+			name:       "bad regexp column name",
+			filePath:   "../samples/fileBadColumnName.csv",
+			schemaPath: "../samples/schema_regexp.json",
+			expectedErr: func() (err error) {
+				err = multierror.Append(err, errors.New("../samples/fileBadColumnName.csv regexp pattern ^comment$ doesn't find in comments"))
+				return err
+			},
 		},
 		{
-			name:        "absent in schema",
-			filePath:    "../samples/file_redundant_column.csv",
-			schemaPath:  "../samples/schema.json",
-			expectedErr: nil,
+			name:       "absent in schema",
+			filePath:   "../samples/file_redundant_column.csv",
+			schemaPath: "../samples/schema.json",
+			expectedErr: func() (err error) {
+				return nil
+			},
 		},
 	}
 
@@ -105,7 +117,7 @@ func TestColumnName_Do(t *testing.T) {
 			assert.NoError(t, err)
 			check := NewColumnName(s)
 			err = check.Do(f)
-			assert.Equal(t, tc.expectedErr, err)
+			assert.Equal(t, tc.expectedErr(), err)
 		})
 	}
 }

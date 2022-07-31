@@ -1,17 +1,15 @@
-package csv
+package files
 
 import (
 	"bytes"
-	"encoding/csv"
-	"io"
 	"path"
 )
 
 // BOM is the pattern of BOM bytes that can contains CSV file
 var BOM = []byte{239, 187, 191}
 
-// RemoveBOM removes BOM bytes pattern from the file
-func RemoveBOM(records []string) {
+// removeBOM removes BOM bytes pattern from the file
+func removeBOM(records []string) {
 	if len(records) != 0 {
 		firstRecord := []byte(records[0])
 		if bytes.Equal(BOM, firstRecord[:3]) {
@@ -23,8 +21,4 @@ func RemoveBOM(records []string) {
 // isCSV makes sure file is CSV
 func isCSV(filePath string) bool {
 	return path.Ext(filePath) == ".csv"
-}
-
-func NewReader(r io.Reader) *csv.Reader {
-	return csv.NewReader(r)
 }

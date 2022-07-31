@@ -60,7 +60,7 @@ func NewColumnName(schema schema.Schema) ColumnName {
 }
 
 // Do is doing the check of ColumnName
-func (cn ColumnName) Do(f *files.File) error {
+func (cn ColumnName) Do(f *files.File) (errs error) {
 	for i, got := range f.Headers() {
 		column, ok := cn.schema.GetColumn(i)
 		if !ok {
@@ -73,26 +73,31 @@ func (cn ColumnName) Do(f *files.File) error {
 		if expected.IsRegexp() {
 			if r, err := regexp.Compile(expected.Regexp()); err == nil {
 				if !r.MatchString(got) {
-					return fmt.Errorf(ErrWrongColumnNameRegexpTmpl, f.Path(), r.String(), got)
+					errs = multierror.Append(errs, fmt.Errorf(ErrWrongColumnNameRegexpTmpl, f.Path(), r.String(), got))
+					continue
 				}
 			}
 			continue
 		}
 		if expected.String() != got {
-			return fmt.Errorf(ErrWrongColumnNameExactTmpl, f.Path(), expected, got)
+			errs = multierror.Append(errs, fmt.Errorf(ErrWrongColumnNameExactTmpl, f.Path(), expected, got))
+			continue
 		}
 	}
-	return nil
+	return errs
 }
 
+// ColumnRegexpMatch checks data in a column on regexp match
 type ColumnRegexpMatch struct {
 	schema schema.Schema
 }
 
+// NewColumnRegexpMatch creates new ColumnRegexpMatch
 func NewColumnRegexpMatch(schema schema.Schema) ColumnRegexpMatch {
 	return ColumnRegexpMatch{schema: schema}
 }
 
+// Do check of ColumnRegexpMatch
 func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
 	for row := range f.Stream() {
 		for j, record := range row.Data {
@@ -114,14 +119,17 @@ func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
 	return err
 }
 
+// ColumnExactContain checks data in column contains strings which specified in schema
 type ColumnExactContain struct {
 	schema schema.Schema
 }
 
+// NewColumnExactContain creates new ColumnExactContain
 func NewColumnExactContain(schema schema.Schema) ColumnExactContain {
 	return ColumnExactContain{schema: schema}
 }
 
+// Do check of ColumnExactContain
 func (c ColumnExactContain) Do(f *files.File) (err error) {
 	data := make(map[string]map[string]struct{}) // todo: two same columns
 	indexes := make(map[int]string)

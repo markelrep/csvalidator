@@ -11,16 +11,16 @@ CSValidator is a tool for validation of .csv files using JSON schema
 
 ```json
 {
-  "columns": {
-    "0": {
+  "columns":[
+    {
       "name": "id",
       "required": true
     },
-    "1": {
+    {
       "name": "comment",
       "required": false
-    } 
-  }
+    }
+  ]
 }
 ```
 `columns` is array of objects with validation rules for each columns in .csv file
@@ -31,13 +31,21 @@ CSValidator is a tool for validation of .csv files using JSON schema
 
 ### Usage
 ```go
-validator := csvalidator.NewValidator(csvalidator.Config{
-    FilePath:       "./path/to/csv/files",
-    FirstIsHeader:  true,
-    SchemaPath:     "./path/to/json/schema",
-    WorkerPoolSize: 0,
-})
-if err := validator.Validate(); err != nil {
-	// handle error
+package main
+import "github.com/markelrep/csvalidator"
+
+func main() {
+	validator, err := csvalidator.NewValidator(csvalidator.Config{
+		FilePath:       "./path/to/csv/files",
+		FirstIsHeader:  true,
+		SchemaPath:     "./path/to/json/schema",
+		WorkerPoolSize: 0,
+	})
+	if err != nil {
+		// handle error
+    }
+	if err := validator.Validate(); err != nil {
+		// handle error
+	}
 }
 ```

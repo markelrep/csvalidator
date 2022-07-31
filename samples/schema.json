@@ -1,15 +1,15 @@
 {
-  "columns": {
-    "0": {
+  "columns": [
+    {
       "name": "id",
       "required": true,
       "record_regexp": "^([0-9]{1})$"
     },
-    "1": {
+    {
       "name": "comment",
       "required": false,
       "record_regexp": "^comment$",
-      "exactContain": ["comment"]
+      "column name is wrong": ["comment"]
     }
-  }
+  ]
 }

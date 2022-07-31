@@ -1,12 +1,12 @@
 {
-  "columns": {
-    "0": {
+  "columns": [
+    {
       "name": "id",
       "required": true
     },
-    "1": {
+    {
       "name": "regexp|^comment$",
       "required": false
     }
-  }
+  ]
 }

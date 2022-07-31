@@ -45,7 +45,7 @@ func TestMissingColumns_Do(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(tc.filePath, true)
+			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
 			assert.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)
@@ -92,13 +92,13 @@ func TestColumnName_Do(t *testing.T) {
 			name:        "absent in schema",
 			filePath:    "../samples/file_redundant_column.csv",
 			schemaPath:  "../samples/schema.json",
-			expectedErr: errors.New("../samples/file_redundant_column.csv column [type] not found in schema"),
+			expectedErr: nil,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(tc.filePath, true)
+			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
 			assert.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)
@@ -141,16 +141,6 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 			filePath:   "../samples/file_redundant_column.csv",
 			schemaPath: "../samples/schema.json",
 			expectedErr: func() (err error) {
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 3))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 4))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 3))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 4))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 3))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 4))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 3))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 4))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 3))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_redundant_column.csv", 4))
 				return err
 			},
 		},
@@ -158,7 +148,7 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(tc.filePath, true)
+			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
 			assert.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)
@@ -201,10 +191,6 @@ func TestColumnExactContain(t *testing.T) {
 			filePath:   "../samples/file_contains_redundant.csv",
 			schemaPath: "../samples/schema_contains.json",
 			expected: func() (err error) {
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_contains_redundant.csv", 4))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_contains_redundant.csv", 4))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_contains_redundant.csv", 4))
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, "../samples/file_contains_redundant.csv", 4))
 				return err
 			},
 		},
@@ -212,7 +198,7 @@ func TestColumnExactContain(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(tc.filePath, true)
+			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
 			require.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)

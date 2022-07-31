@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/markelrep/csvalidator/config"
+
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/markelrep/csvalidator/schema"
@@ -17,22 +19,17 @@ import (
 type Validator struct {
 	schema schema.Schema
 	files  files.Files
-	config Config
+	config config.Config
 }
 
 // NewValidator creates a new Validator
-func NewValidator(config Config) (Validator, error) {
+func NewValidator(config config.Config) (Validator, error) {
 	s, err := schema.Parse(config.SchemaPath)
 	if err != nil {
 		return Validator{}, fmt.Errorf("failed create validator: %w", err)
 	}
 
-	file, err := files.NewFiles(files.Config{
-		Path:          config.FilePath,
-		FirstIsHeader: config.FirstIsHeader,
-		LazyQuotes:    config.LazyQuotes,
-		Comma:         config.Comma,
-	})
+	file, err := files.NewFiles(config)
 	if err != nil {
 		return Validator{}, err
 	}

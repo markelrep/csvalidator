@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/markelrep/csvalidator/config"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestTest(t *testing.T) {
-	fs, err := NewFile("../samples/file.csv", Config{FirstIsHeader: true})
+	fs, err := NewFile("../samples/file.csv", config.Config{FirstIsHeader: true})
 	require.NoError(t, err)
 	for r := range fs.Stream() {
 		fmt.Println(r.Index, ":", r.Data)
@@ -18,24 +20,24 @@ func TestTest(t *testing.T) {
 }
 
 func TestNewFile(t *testing.T) {
-	_, err := NewFile("../samples/file.csv", Config{FirstIsHeader: true})
+	_, err := NewFile("../samples/file.csv", config.Config{FirstIsHeader: true})
 	require.NoError(t, err)
 }
 
 func TestFile_FirstIsHeader(t *testing.T) {
-	f, err := NewFile("../samples/file.csv", Config{FirstIsHeader: true})
+	f, err := NewFile("../samples/file.csv", config.Config{FirstIsHeader: true})
 	require.NoError(t, err)
 	assert.Equal(t, true, f.config.FirstIsHeader)
 }
 
 func TestFile_Path(t *testing.T) {
-	f, err := NewFile("../samples/file.csv", Config{FirstIsHeader: true})
+	f, err := NewFile("../samples/file.csv", config.Config{FirstIsHeader: true})
 	require.NoError(t, err)
 	assert.Equal(t, "../samples/file.csv", f.Path())
 }
 
 func TestFile_HasHeader(t *testing.T) {
-	f, err := NewFile("../samples/file.csv", Config{FirstIsHeader: true})
+	f, err := NewFile("../samples/file.csv", config.Config{FirstIsHeader: true})
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -58,13 +60,13 @@ func TestFile_HasHeader(t *testing.T) {
 }
 
 func TestFile_HeadersCount(t *testing.T) {
-	f, err := NewFile("../samples/file.csv", Config{FirstIsHeader: true})
+	f, err := NewFile("../samples/file.csv", config.Config{FirstIsHeader: true})
 	require.NoError(t, err)
 	assert.Equal(t, 2, f.HeadersCount())
 }
 
 func TestFile_Headers(t *testing.T) {
-	f, err := NewFile("../samples/file.csv", Config{FirstIsHeader: true})
+	f, err := NewFile("../samples/file.csv", config.Config{FirstIsHeader: true})
 	require.NoError(t, err)
 	assert.Equal(t, []string{"id", "comment"}, f.Headers())
 }

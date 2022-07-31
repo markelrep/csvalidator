@@ -7,12 +7,14 @@ import (
 	"io/fs"
 	"log"
 	"os"
+
+	"github.com/markelrep/csvalidator/config"
 )
 
 // File represent CSV file
 type File struct {
 	stream     chan Row
-	config     Config
+	config     config.Config
 	headersMap map[string]struct{}
 	headers    []string
 	headersLen int
@@ -25,7 +27,7 @@ type Row struct {
 	Index int
 }
 
-func NewFile(path string, config Config) (*File, error) {
+func NewFile(path string, config config.Config) (*File, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -124,8 +126,8 @@ func (f *File) Headers() []string {
 type Files []*File
 
 // NewFiles create a new Files from path
-func NewFiles(config Config) (Files, error) {
-	path := config.Path
+func NewFiles(config config.Config) (Files, error) {
+	path := config.FilePath
 	var files Files
 	if isDir(path) {
 		err := fs.WalkDir(os.DirFS(path), ".", func(p string, d fs.DirEntry, err error) error {

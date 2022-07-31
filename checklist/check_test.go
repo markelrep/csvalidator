@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/markelrep/csvalidator/config"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/go-multierror"
@@ -45,7 +47,7 @@ func TestMissingColumns_Do(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
+			file, err := files.NewFiles(config.Config{FilePath: tc.filePath, FirstIsHeader: true})
 			assert.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)
@@ -110,7 +112,7 @@ func TestColumnName_Do(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
+			file, err := files.NewFiles(config.Config{FilePath: tc.filePath, FirstIsHeader: true})
 			assert.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)
@@ -160,7 +162,7 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
+			file, err := files.NewFiles(config.Config{FilePath: tc.filePath, FirstIsHeader: true})
 			assert.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)
@@ -210,7 +212,7 @@ func TestColumnExactContain(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			file, err := files.NewFiles(files.Config{Path: tc.filePath, FirstIsHeader: true})
+			file, err := files.NewFiles(config.Config{FilePath: tc.filePath, FirstIsHeader: true})
 			require.NoError(t, err)
 			f := file[0]
 			s, err := schema.Parse(tc.schemaPath)

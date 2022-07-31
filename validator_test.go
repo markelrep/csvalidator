@@ -3,11 +3,13 @@ package csvalidator
 import (
 	"testing"
 
+	"github.com/markelrep/csvalidator/config"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestValidator_Validate(t *testing.T) {
-	validator, err := NewValidator(Config{
+	validator, err := NewValidator(config.Config{
 		FilePath:       "./samples/file.csv",
 		FirstIsHeader:  true,
 		SchemaPath:     "./samples/schema.json",
@@ -36,7 +38,7 @@ func TestValidator_NewValidator(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, err := NewValidator(Config{
+		_, err := NewValidator(config.Config{
 			FilePath:       tc.path,
 			FirstIsHeader:  tc.firstHeader,
 			SchemaPath:     tc.schemaPath,

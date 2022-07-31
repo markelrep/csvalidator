@@ -62,9 +62,9 @@ func NewColumnName(schema schema.Schema) ColumnName {
 // Do is doing the check of ColumnName
 func (cn ColumnName) Do(f *files.File) error {
 	for i, got := range f.Headers() {
-		column, ok := cn.schema.Columns[i]
+		column, ok := cn.schema.GetColumn(i)
 		if !ok {
-			return fmt.Errorf(ErrColumnNameAbsentSchemaTmpl, f.Path(), got)
+			continue
 		}
 		expected := column.Name
 		if expected.IsNoOp() {
@@ -96,9 +96,9 @@ func NewColumnRegexpMatch(schema schema.Schema) ColumnRegexpMatch {
 func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
 	for row := range f.Stream() {
 		for j, record := range row.Data {
-			column, ok := cc.schema.Columns[j]
+			column, ok := cc.schema.GetColumn(j)
 			if !ok {
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, f.Path(), j+1))
+				continue
 			}
 			regexpPattern := column.RecordRegexp
 			if regexpPattern.IsNoOp() {
@@ -129,7 +129,11 @@ func (c ColumnExactContain) Do(f *files.File) (err error) {
 	for row := range f.Stream() {
 		if row.Index == 1 {
 			for i := 0; i < len(row.Data); i++ {
-				if c.schema.Columns[i].ExactContain.IsNoOp() {
+				column, ok := c.schema.GetColumn(i)
+				if !ok {
+					continue
+				}
+				if column.ExactContain.IsNoOp() {
 					continue
 				}
 				id := uuid.NewString()
@@ -138,9 +142,8 @@ func (c ColumnExactContain) Do(f *files.File) (err error) {
 			}
 		}
 		for j, cell := range row.Data {
-			column, ok := c.schema.Columns[j]
+			column, ok := c.schema.GetColumn(j)
 			if !ok {
-				err = multierror.Append(err, fmt.Errorf(ErrColumnIndexAbsentTmpl, f.Path(), j+1))
 				continue
 			}
 			if column.ExactContain.IsNoOp() {

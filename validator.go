@@ -27,7 +27,12 @@ func NewValidator(config Config) (Validator, error) {
 		return Validator{}, fmt.Errorf("failed create validator: %w", err)
 	}
 
-	file, err := files.NewFiles(config.FilePath, config.FirstIsHeader)
+	file, err := files.NewFiles(files.Config{
+		Path:          config.FilePath,
+		FirstIsHeader: config.FirstIsHeader,
+		LazyQuotes:    config.LazyQuotes,
+		Comma:         config.Comma,
+	})
 	if err != nil {
 		return Validator{}, err
 	}

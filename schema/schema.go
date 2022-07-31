@@ -8,10 +8,10 @@ import (
 
 const regexpPref = "regexp|"
 
-type Columns map[int]column
+type ColumnsMap map[int]Column
 
-// column recordRegexp all appropriate data which will be needed to validate column in csv
-type column struct {
+// Column recordRegexp all appropriate data which will be needed to validate column in csv
+type Column struct {
 	Name         name         `json:"name"`
 	Required     bool         `json:"required"`
 	RecordRegexp recordRegexp `json:"record_regexp"`
@@ -20,7 +20,8 @@ type column struct {
 
 // Schema recordRegexp suite of information by which file validates
 type Schema struct {
-	Columns Columns `json:"columns"`
+	Columns    []Column   `json:"columns"`
+	ColumnsMap ColumnsMap `json:"-"`
 }
 
 func Parse(schemaPath string) (Schema, error) {
@@ -33,5 +34,14 @@ func Parse(schemaPath string) (Schema, error) {
 	if err != nil {
 		return Schema{}, fmt.Errorf("failed unmarshal Schema from %v: %w", schemaPath, err)
 	}
+	s.ColumnsMap = make(ColumnsMap, len(s.Columns))
+	for i, v := range s.Columns {
+		s.ColumnsMap[i] = v
+	}
 	return s, nil
+}
+
+func (s Schema) GetColumn(index int) (Column, bool) {
+	column, ok := s.ColumnsMap[index]
+	return column, ok
 }

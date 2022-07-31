@@ -13,12 +13,12 @@ import (
 
 // File represent CSV file
 type File struct {
-	stream        chan Row
-	firstIsHeader bool
-	headersMap    map[string]struct{}
-	headers       []string
-	headersLen    int
-	path          string
+	stream     chan Row
+	config     Config
+	headersMap map[string]struct{}
+	headers    []string
+	headersLen int
+	path       string
 }
 
 // Row represents row from csv file as slice of string
@@ -27,19 +27,23 @@ type Row struct {
 	Index int
 }
 
-func NewFile(path string, firstIsHeader bool) (*File, error) {
+func NewFile(path string, config Config) (*File, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	ch := make(chan Row)
 	csvReader := csv.NewReader(f)
-	// TODO: configure lazy quotes and coma
+	csvReader.LazyQuotes = config.LazyQuotes
+	if config.Comma != 0 {
+		csvReader.Comma = config.Comma
+	}
 
 	var headers []string
 	headersMap := make(map[string]struct{})
-	if firstIsHeader {
+	if config.FirstIsHeader {
 		line, err := csvReader.Read()
+		csv.RemoveBOM(line)
 		if err != nil {
 			return nil, err
 		}
@@ -50,12 +54,12 @@ func NewFile(path string, firstIsHeader bool) (*File, error) {
 	}
 
 	fileStream := &File{
-		stream:        ch,
-		headersMap:    headersMap,
-		headers:       headers,
-		headersLen:    len(headers),
-		firstIsHeader: firstIsHeader,
-		path:          path,
+		stream:     ch,
+		config:     config,
+		path:       path,
+		headersMap: headersMap,
+		headers:    headers,
+		headersLen: len(headers),
 	}
 
 	go fileStream.run(csvReader)
@@ -76,8 +80,11 @@ func (f *File) run(reader *stdcsv.Reader) {
 			close(f.stream)
 			return
 		}
-		if f.firstIsHeader && line == 0 {
+		if f.config.FirstIsHeader && line == 0 {
 			line++
+		}
+		if !f.config.FirstIsHeader && line == 0 {
+			csv.RemoveBOM(data)
 		}
 		f.stream <- Row{Data: data, Index: line}
 		line++
@@ -97,7 +104,7 @@ func (f *File) HasHeader(value string) bool {
 
 // FirstIsHeader gets information about first line, is it header or not
 func (f *File) FirstIsHeader() bool {
-	return f.firstIsHeader
+	return f.config.FirstIsHeader
 }
 
 // Path returns path to file
@@ -119,7 +126,8 @@ func (f *File) Headers() []string {
 type Files []*File
 
 // NewFiles create a new Files from path
-func NewFiles(path string, firstHeader bool) (Files, error) {
+func NewFiles(config Config) (Files, error) {
+	path := config.Path
 	var files Files
 	if isDir(path) {
 		err := fs.WalkDir(os.DirFS(path), ".", func(p string, d fs.DirEntry, err error) error {
@@ -130,7 +138,7 @@ func NewFiles(path string, firstHeader bool) (Files, error) {
 				return nil
 			}
 			fullPath := path + "/" + p
-			f, err := NewFile(fullPath, firstHeader)
+			f, err := NewFile(fullPath, config)
 			if err != nil {
 				return err
 			}
@@ -143,7 +151,7 @@ func NewFiles(path string, firstHeader bool) (Files, error) {
 		return files, nil
 	}
 
-	f, err := NewFile(path, firstHeader)
+	f, err := NewFile(path, config)
 	if err != nil {
 		return nil, err
 	}

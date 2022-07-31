@@ -1,18 +1,18 @@
 {
-  "columns": {
-    "0": {
+  "columns": [
+    {
       "name": "id",
       "required": true
     },
-    "1": {
+    {
       "name": "type",
       "required": false,
       "exactContain": ["foo", "bar", "foobar", "some value"]
     },
-    "2": {
+    {
       "name": "column",
       "required": false,
       "exactContain": ["value1", "value2", "value3", "value4"]
     }
-  }
+  ]
 }

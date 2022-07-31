@@ -7,7 +7,6 @@ import (
 )
 
 func TestValidator_Validate(t *testing.T) {
-
 	validator, err := NewValidator(Config{
 		FilePath:       "./samples/file.csv",
 		FirstIsHeader:  true,

@@ -2,7 +2,6 @@ package files
 
 import (
 	"bytes"
-	"path"
 )
 
 // BOM is the pattern of BOM bytes that can contains CSV file
@@ -16,9 +15,4 @@ func removeBOM(records []string) {
 			records[0] = string(firstRecord[3:])
 		}
 	}
-}
-
-// isCSV makes sure file is CSV
-func isCSV(filePath string) bool {
-	return path.Ext(filePath) == ".csv"
 }

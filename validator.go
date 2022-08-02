@@ -3,6 +3,7 @@ package csvalidator
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/markelrep/csvalidator/config"
 
@@ -75,14 +76,32 @@ func newJob(file *files.File, checks checklist.Checklist) job {
 	}
 }
 
-func (j job) Do() error {
-	var errs error
-	for _, check := range j.checks.List {
-		err := check.Do(j.file)
-		if err != nil {
-			errs = multierror.Append(errs, err)
-			continue
+func (j job) enqueue() {
+	for row := range j.file.Stream() {
+		for _, check := range j.checks.List {
+			check.Enqueue(row)
 		}
 	}
+	for _, check := range j.checks.List {
+		check.Done()
+	}
+}
+
+func (j job) Do() error {
+	go j.enqueue()
+
+	var errs error
+	var wg sync.WaitGroup
+	for _, check := range j.checks.List {
+		wg.Add(1)
+		go func(check checklist.Checker) {
+			err := check.Do(j.file)
+			if err != nil {
+				errs = multierror.Append(errs, err)
+			}
+			wg.Done()
+		}(check)
+	}
+	wg.Wait()
 	return errs
 }

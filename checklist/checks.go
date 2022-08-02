@@ -16,12 +16,16 @@ import (
 // MissingColumn checks that all appropriate columns are presented in a file
 type MissingColumn struct {
 	schema schema.Schema
+	rows   chan files.Row
 }
 
 // NewMissingColumn creates new MissingColumn check
 func NewMissingColumn(schema schema.Schema) MissingColumn {
-	return MissingColumn{schema: schema}
+	return MissingColumn{schema: schema, rows: make(chan files.Row)}
 }
+
+func (mc MissingColumn) Done()                 {}
+func (mc MissingColumn) Enqueue(row files.Row) {}
 
 // Do is doing the check of MissingColumn
 func (mc MissingColumn) Do(f *files.File) error {
@@ -52,12 +56,16 @@ func (mc MissingColumn) Do(f *files.File) error {
 // ColumnName checks that all columns have a name which was defined in schema
 type ColumnName struct {
 	schema schema.Schema
+	rows   chan files.Row
 }
 
 // NewColumnName creates a new ColumnName check
 func NewColumnName(schema schema.Schema) ColumnName {
-	return ColumnName{schema: schema}
+	return ColumnName{schema: schema, rows: make(chan files.Row)}
 }
+
+func (cn ColumnName) Done()                 {}
+func (cn ColumnName) Enqueue(row files.Row) {}
 
 // Do is doing the check of ColumnName
 func (cn ColumnName) Do(f *files.File) (errs error) {
@@ -90,16 +98,24 @@ func (cn ColumnName) Do(f *files.File) (errs error) {
 // ColumnRegexpMatch checks data in a column on regexp match
 type ColumnRegexpMatch struct {
 	schema schema.Schema
+	rows   chan files.Row
 }
 
 // NewColumnRegexpMatch creates new ColumnRegexpMatch
 func NewColumnRegexpMatch(schema schema.Schema) ColumnRegexpMatch {
-	return ColumnRegexpMatch{schema: schema}
+	return ColumnRegexpMatch{schema: schema, rows: make(chan files.Row)}
+}
+
+func (cc ColumnRegexpMatch) Done() {
+	close(cc.rows)
+}
+func (cc ColumnRegexpMatch) Enqueue(row files.Row) {
+	cc.rows <- row
 }
 
 // Do check of ColumnRegexpMatch
 func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
-	for row := range f.Stream() {
+	for row := range cc.rows {
 		for j, record := range row.Data {
 			column, ok := cc.schema.GetColumn(j)
 			if !ok {
@@ -122,11 +138,19 @@ func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
 // ColumnExactContain checks data in column contains strings which specified in schema
 type ColumnExactContain struct {
 	schema schema.Schema
+	rows   chan files.Row
 }
 
 // NewColumnExactContain creates new ColumnExactContain
 func NewColumnExactContain(schema schema.Schema) ColumnExactContain {
-	return ColumnExactContain{schema: schema}
+	return ColumnExactContain{schema: schema, rows: make(chan files.Row)}
+}
+
+func (c ColumnExactContain) Done() {
+	close(c.rows)
+}
+func (c ColumnExactContain) Enqueue(row files.Row) {
+	c.rows <- row
 }
 
 // Do check of ColumnExactContain
@@ -134,7 +158,7 @@ func (c ColumnExactContain) Do(f *files.File) (err error) {
 	data := make(map[string]map[string]struct{}) // todo: two same columns
 	indexes := make(map[int]string)
 
-	for row := range f.Stream() {
+	for row := range c.rows {
 		if row.Index == 1 {
 			for i := 0; i < len(row.Data); i++ {
 				column, ok := c.schema.GetColumn(i)
@@ -163,7 +187,7 @@ func (c ColumnExactContain) Do(f *files.File) (err error) {
 	for index, key := range indexes {
 		e := c.schema.Columns[index].ExactContain.Contain(data[key])
 		if e != nil {
-			err = multierror.Append(err, multierror.Prefix(e, f.Path()))
+			err = multierror.Append(err, multierror.Prefix(e, fmt.Sprintf("%s column: %d", f.Path(), index)))
 		}
 	}
 	return err

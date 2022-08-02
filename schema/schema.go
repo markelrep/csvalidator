@@ -15,7 +15,7 @@ type Column struct {
 	Name         name         `json:"name"`
 	Required     bool         `json:"required"`
 	RecordRegexp recordRegexp `json:"record_regexp"`
-	ExactContain exactContain `json:"exactContain"`
+	ExactContain exactContain `json:"exact_contain"`
 }
 
 // Schema recordRegexp suite of information by which file validates

@@ -53,6 +53,12 @@ func TestMissingColumns_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewMissingColumn(s)
+			go func() {
+				for row := range f.Stream() {
+					check.Enqueue(row)
+				}
+				check.Done()
+			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expectedErr, err)
 		})
@@ -118,6 +124,12 @@ func TestColumnName_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewColumnName(s)
+			go func() {
+				for row := range f.Stream() {
+					check.Enqueue(row)
+				}
+				check.Done()
+			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expectedErr(), err)
 		})
@@ -168,6 +180,12 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewColumnRegexpMatch(s)
+			go func() {
+				for row := range f.Stream() {
+					check.Enqueue(row)
+				}
+				check.Done()
+			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expectedErr(), err)
 		})
@@ -195,8 +213,8 @@ func TestColumnExactContain(t *testing.T) {
 			filePath:   "../samples/file_contains_err.csv",
 			schemaPath: "../samples/schema_contains.json",
 			expected: func() (err error) {
-				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("some value is defined in schema, but absent in column"), "../samples/file_contains_err.csv"))
-				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("value4 is defined in schema, but absent in column"), "../samples/file_contains_err.csv"))
+				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("some value is defined in schema, but absent in column"), fmt.Sprintf("%s column: %d", "../samples/file_contains_err.csv", 1)))
+				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("value4 is defined in schema, but absent in column"), fmt.Sprintf("%s column: %d", "../samples/file_contains_err.csv", 2)))
 				return err
 			},
 		},
@@ -218,6 +236,12 @@ func TestColumnExactContain(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			require.NoError(t, err)
 			check := NewColumnExactContain(s)
+			go func() {
+				for row := range f.Stream() {
+					check.Enqueue(row)
+				}
+				check.Done()
+			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expected(), err)
 		})

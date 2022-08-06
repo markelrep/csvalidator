@@ -13,7 +13,6 @@ import (
 
 // File represent CSV file
 type File struct {
-	stream     chan Row
 	config     config.Config
 	headersMap map[string]struct{}
 	headers    []string
@@ -28,19 +27,17 @@ type Row struct {
 }
 
 func NewFile(path string, config config.Config) (*File, error) {
-	f, err := os.Open(path)
+	fileStream := &File{
+		config:     config,
+		path:       path,
+		headersMap: make(map[string]struct{}),
+	}
+
+	csvReader, err := fileStream.newCSVReader()
 	if err != nil {
 		return nil, err
 	}
-	ch := make(chan Row)
-	csvReader := csv.NewReader(f)
-	csvReader.LazyQuotes = config.LazyQuotes
-	if config.Comma != 0 {
-		csvReader.Comma = config.Comma
-	}
 
-	var headers []string
-	headersMap := make(map[string]struct{})
 	if config.FirstIsHeader {
 		line, err := csvReader.Read()
 		removeBOM(line)
@@ -48,52 +45,66 @@ func NewFile(path string, config config.Config) (*File, error) {
 			return nil, err
 		}
 		for _, l := range line {
-			headersMap[l] = struct{}{}
-			headers = append(headers, l)
+			fileStream.headersMap[l] = struct{}{}
+			fileStream.headers = append(fileStream.headers, l)
 		}
 	}
 
-	fileStream := &File{
-		stream:     ch,
-		config:     config,
-		path:       path,
-		headersMap: headersMap,
-		headers:    headers,
-		headersLen: len(headers),
-	}
-
-	go fileStream.run(csvReader)
+	fileStream.headersLen = len(fileStream.headers)
 
 	return fileStream, nil
 }
 
-func (f *File) run(reader *csv.Reader) {
+func (f *File) newCSVReader() (*csv.Reader, error) {
+	file, err := os.Open(f.path)
+	if err != nil {
+		return nil, err
+	}
+	csvReader := csv.NewReader(file)
+	csvReader.LazyQuotes = f.config.LazyQuotes
+	if f.config.Comma != 0 {
+		csvReader.Comma = f.config.Comma
+	}
+	return csvReader, nil
+}
+
+func (f *File) run(reader *csv.Reader, ch chan Row) {
 	var line int
 	for {
 		data, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
-				close(f.stream)
+				close(ch)
 				return
 			}
-			log.Println(err)
-			close(f.stream)
+			log.Println(err) // TODO: handle error properly
+			close(ch)
 			return
 		}
 		if f.config.FirstIsHeader && line == 0 {
 			line++
+			continue
 		}
 		if !f.config.FirstIsHeader && line == 0 {
 			removeBOM(data)
 		}
-		f.stream <- Row{Data: data, Index: line}
+		ch <- Row{Data: data, Index: line}
 		line++
 	}
 }
 
 // Stream returns chanel of row.
-func (f *File) Stream() chan Row {
-	return f.stream
+func (f *File) Stream() <-chan Row {
+	ch := make(chan Row)
+	reader, err := f.newCSVReader()
+	if err != nil {
+		log.Println("read file: ", err) // TODO: handle error properly
+		close(ch)
+		return ch
+	}
+	go f.run(reader, ch)
+
+	return ch
 }
 
 // HasHeader checks if specific header exists or not

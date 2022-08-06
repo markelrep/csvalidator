@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/hashicorp/go-multierror"
 )
@@ -17,14 +17,16 @@ func (c exactContain) Contain(values map[string]struct{}) (err error) {
 		containMap[contain] = struct{}{}
 		_, ok := values[contain]
 		if !ok {
-			err = multierror.Append(err, fmt.Errorf("%s is defined in schema, but absent in column", contain))
+			errStr := contain + " is defined in schema, but absent in column"
+			err = multierror.Append(err, errors.New(errStr))
 		}
 	}
 
 	for v := range values {
 		_, ok := containMap[v]
 		if !ok {
-			err = multierror.Append(err, fmt.Errorf("%s is not defined in schema, but exist in column", v))
+			errStr := v + " is not defined in schema, but exist in column"
+			err = multierror.Append(err, errors.New(errStr))
 		}
 	}
 	return err

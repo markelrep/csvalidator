@@ -53,12 +53,6 @@ func TestMissingColumns_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewMissingColumn(s)
-			go func() {
-				for row := range f.Stream() {
-					check.Enqueue(row)
-				}
-				check.Done()
-			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expectedErr, err)
 		})
@@ -124,12 +118,6 @@ func TestColumnName_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewColumnName(s)
-			go func() {
-				for row := range f.Stream() {
-					check.Enqueue(row)
-				}
-				check.Done()
-			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expectedErr(), err)
 		})
@@ -180,12 +168,6 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewColumnRegexpMatch(s)
-			go func() {
-				for row := range f.Stream() {
-					check.Enqueue(row)
-				}
-				check.Done()
-			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expectedErr(), err)
 		})
@@ -236,12 +218,6 @@ func TestColumnExactContain(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			require.NoError(t, err)
 			check := NewColumnExactContain(s)
-			go func() {
-				for row := range f.Stream() {
-					check.Enqueue(row)
-				}
-				check.Done()
-			}()
 			err = check.Do(f)
 			assert.Equal(t, tc.expected(), err)
 		})

@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/markelrep/csvalidator/config"
-
 	"github.com/hashicorp/go-multierror"
+	"github.com/markelrep/csvalidator/config"
 
 	"github.com/markelrep/csvalidator/schema"
 	"github.com/markelrep/csvalidator/worker"
@@ -76,20 +75,7 @@ func newJob(file *files.File, checks checklist.Checklist) job {
 	}
 }
 
-func (j job) enqueue() {
-	for row := range j.file.Stream() {
-		for _, check := range j.checks.List {
-			check.Enqueue(row)
-		}
-	}
-	for _, check := range j.checks.List {
-		check.Done()
-	}
-}
-
 func (j job) Do() error {
-	go j.enqueue()
-
 	var errs error
 	var wg sync.WaitGroup
 	for _, check := range j.checks.List {

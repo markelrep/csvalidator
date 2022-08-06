@@ -9,8 +9,6 @@ import (
 type Checker interface {
 	// Do is doing check of file
 	Do(f *files.File) error
-	Enqueue(row files.Row)
-	Done()
 }
 
 // Checklist is list of checks which should be applied to the file

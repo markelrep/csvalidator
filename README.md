@@ -40,6 +40,8 @@ func main() {
 		FirstIsHeader:  true,
 		SchemaPath:     "./path/to/json/schema",
 		WorkerPoolSize: 0,
+		// If ErrFilePath is defined then all errors with be written to this file else to the std our 
+		ErrFilePath "./path/to/dst/file/with/errors"
 	})
 	if err != nil {
 		// handle error

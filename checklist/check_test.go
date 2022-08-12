@@ -9,8 +9,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/go-multierror"
-
 	"github.com/markelrep/csvalidator/schema"
 
 	"github.com/markelrep/csvalidator/files"
@@ -53,8 +51,12 @@ func TestMissingColumns_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewMissingColumn(s)
-			err = check.Do(f)
-			assert.Equal(t, tc.expectedErr, err)
+			errCh := make(chan error, 1)
+			check.Do(f, errCh)
+			close(errCh)
+			for err = range errCh {
+				assert.Equal(t, tc.expectedErr, err)
+			}
 		})
 	}
 }
@@ -79,8 +81,7 @@ func TestColumnName_Do(t *testing.T) {
 			filePath:   "../samples/fileBadColumnName.csv",
 			schemaPath: "../samples/schema.json",
 			expectedErr: func() (err error) {
-				err = multierror.Append(err, errors.New("../samples/fileBadColumnName.csv column name is wrong, expected: comment, got: comments"))
-				return err
+				return errors.New("../samples/fileBadColumnName.csv column name is wrong, expected: comment, got: comments")
 			},
 		},
 		{
@@ -96,8 +97,7 @@ func TestColumnName_Do(t *testing.T) {
 			filePath:   "../samples/fileBadColumnName.csv",
 			schemaPath: "../samples/schema_regexp.json",
 			expectedErr: func() (err error) {
-				err = multierror.Append(err, errors.New("../samples/fileBadColumnName.csv regexp pattern ^comment$ doesn't find in comments"))
-				return err
+				return errors.New("../samples/fileBadColumnName.csv regexp pattern ^comment$ doesn't find in comments")
 			},
 		},
 		{
@@ -118,8 +118,12 @@ func TestColumnName_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewColumnName(s)
-			err = check.Do(f)
-			assert.Equal(t, tc.expectedErr(), err)
+			errCh := make(chan error, 1)
+			check.Do(f, errCh)
+			close(errCh)
+			for err = range errCh {
+				assert.Equal(t, tc.expectedErr(), err)
+			}
 		})
 	}
 }
@@ -129,13 +133,13 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 		name        string
 		filePath    string
 		schemaPath  string
-		expectedErr func() error
+		expectedErr func() []error
 	}{
 		{
 			name:       "success case",
 			filePath:   "../samples/file.csv",
 			schemaPath: "../samples/schema.json",
-			expectedErr: func() error {
+			expectedErr: func() []error {
 				return nil
 			},
 		},
@@ -143,18 +147,18 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 			name:       "with content error",
 			filePath:   "../samples/fileContainWrongData.csv",
 			schemaPath: "../samples/schema.json",
-			expectedErr: func() error {
-				var err error
-				err = multierror.Append(err, fmt.Errorf(ErrUnexpectedDataInCellTmpl, "../samples/fileContainWrongData.csv", 5, 1, "id", 12))
-				err = multierror.Append(err, fmt.Errorf(ErrUnexpectedDataInCellTmpl, "../samples/fileContainWrongData.csv", 5, 2, "comment", "blah"))
-				return err
+			expectedErr: func() []error {
+				var errs []error
+				errs = append(errs, fmt.Errorf(ErrUnexpectedDataInCellTmpl, "../samples/fileContainWrongData.csv", 5, 1, "id", 12))
+				errs = append(errs, fmt.Errorf(ErrUnexpectedDataInCellTmpl, "../samples/fileContainWrongData.csv", 5, 2, "comment", "blah"))
+				return errs
 			},
 		},
 		{
 			name:       "with schema error",
 			filePath:   "../samples/file_redundant_column.csv",
 			schemaPath: "../samples/schema.json",
-			expectedErr: func() (err error) {
+			expectedErr: func() (err []error) {
 				return err
 			},
 		},
@@ -168,8 +172,18 @@ func TestColumnRegexpMatch_Do(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			assert.NoError(t, err)
 			check := NewColumnRegexpMatch(s)
-			err = check.Do(f)
-			assert.Equal(t, tc.expectedErr(), err)
+			errCh := make(chan error, 2)
+			check.Do(f, errCh)
+			close(errCh)
+			var i int
+			for err = range errCh {
+				if len(tc.expectedErr()) > 0 {
+					assert.Equal(t, tc.expectedErr()[i].Error(), err.Error())
+					i++
+					continue
+				}
+				assert.Equal(t, tc.expectedErr(), err)
+			}
 		})
 	}
 }
@@ -180,13 +194,13 @@ func TestColumnExactContain(t *testing.T) {
 		name       string
 		filePath   string
 		schemaPath string
-		expected   func() error
+		expected   func() []error
 	}{
 		{
 			name:       "success case",
 			filePath:   "../samples/file_contains.csv",
 			schemaPath: "../samples/schema_contains.json",
-			expected: func() error {
+			expected: func() []error {
 				return nil
 			},
 		},
@@ -194,9 +208,9 @@ func TestColumnExactContain(t *testing.T) {
 			name:       "with error",
 			filePath:   "../samples/file_contains_err.csv",
 			schemaPath: "../samples/schema_contains.json",
-			expected: func() (err error) {
-				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("some value is defined in schema, but absent in column"), fmt.Sprintf("%s column: %d", "../samples/file_contains_err.csv", 1)))
-				err = multierror.Append(err, multierror.Prefix(fmt.Errorf("value4 is defined in schema, but absent in column"), fmt.Sprintf("%s column: %d", "../samples/file_contains_err.csv", 2)))
+			expected: func() (err []error) {
+				err = append(err, fmt.Errorf("%s column: %d some value is defined in schema, but absent in column\n", "../samples/file_contains_err.csv", 1))
+				err = append(err, fmt.Errorf("%s column: %d value4 is defined in schema, but absent in column\n", "../samples/file_contains_err.csv", 2))
 				return err
 			},
 		},
@@ -204,7 +218,7 @@ func TestColumnExactContain(t *testing.T) {
 			name:       "with schema error",
 			filePath:   "../samples/file_contains_redundant.csv",
 			schemaPath: "../samples/schema_contains.json",
-			expected: func() (err error) {
+			expected: func() (err []error) {
 				return err
 			},
 		},
@@ -218,8 +232,18 @@ func TestColumnExactContain(t *testing.T) {
 			s, err := schema.Parse(tc.schemaPath)
 			require.NoError(t, err)
 			check := NewColumnExactContain(s)
-			err = check.Do(f)
-			assert.Equal(t, tc.expected(), err)
+			errCh := make(chan error, 2)
+			check.Do(f, errCh)
+			close(errCh)
+			var i int
+			for err = range errCh {
+				if len(tc.expected()) > 0 {
+					assert.Equal(t, tc.expected()[i], err)
+					i++
+					continue
+				}
+				assert.Equal(t, tc.expected(), err)
+			}
 		})
 	}
 }

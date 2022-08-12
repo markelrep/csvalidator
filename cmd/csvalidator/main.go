@@ -38,6 +38,6 @@ func main() {
 	}
 	err = validator.Validate()
 	if err != nil {
-		log.Fatalln("validation error ", err)
+		log.Fatalln(err)
 	}
 }

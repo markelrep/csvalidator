@@ -8,8 +8,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/hashicorp/go-multierror"
-
 	"github.com/markelrep/csvalidator/schema"
 
 	"github.com/markelrep/csvalidator/files"
@@ -18,16 +16,15 @@ import (
 // MissingColumn checks that all appropriate columns are presented in a file
 type MissingColumn struct {
 	schema schema.Schema
-	rows   chan files.Row
 }
 
 // NewMissingColumn creates new MissingColumn check
 func NewMissingColumn(schema schema.Schema) MissingColumn {
-	return MissingColumn{schema: schema, rows: make(chan files.Row)}
+	return MissingColumn{schema: schema}
 }
 
 // Do is doing the check of MissingColumn
-func (mc MissingColumn) Do(f *files.File) error {
+func (mc MissingColumn) Do(f *files.File, errCh chan error) {
 	missing := make([]string, 0, f.HeadersCount())
 	for i, column := range mc.schema.Columns {
 		if column.Required {
@@ -47,24 +44,22 @@ func (mc MissingColumn) Do(f *files.File) error {
 		}
 	}
 	if len(missing) > 0 {
-		return fmt.Errorf(ErrHeaderIsMissingTmpl, f.Path(), missing)
+		errCh <- fmt.Errorf(ErrHeaderIsMissingTmpl, f.Path(), missing)
 	}
-	return nil
 }
 
 // ColumnName checks that all columns have a name which was defined in schema
 type ColumnName struct {
 	schema schema.Schema
-	rows   chan files.Row
 }
 
 // NewColumnName creates a new ColumnName check
 func NewColumnName(schema schema.Schema) ColumnName {
-	return ColumnName{schema: schema, rows: make(chan files.Row)}
+	return ColumnName{schema: schema}
 }
 
 // Do is doing the check of ColumnName
-func (cn ColumnName) Do(f *files.File) (errs error) {
+func (cn ColumnName) Do(f *files.File, errCh chan error) {
 	for i, got := range f.Headers() {
 		column, ok := cn.schema.GetColumn(i)
 		if !ok {
@@ -77,18 +72,17 @@ func (cn ColumnName) Do(f *files.File) (errs error) {
 		if expected.IsRegexp() {
 			if r, err := regexp.Compile(expected.Regexp()); err == nil {
 				if !r.MatchString(got) {
-					errs = multierror.Append(errs, fmt.Errorf(ErrWrongColumnNameRegexpTmpl, f.Path(), r.String(), got))
+					errCh <- fmt.Errorf(ErrWrongColumnNameRegexpTmpl, f.Path(), r.String(), got)
 					continue
 				}
 			}
 			continue
 		}
 		if expected.String() != got {
-			errs = multierror.Append(errs, fmt.Errorf(ErrWrongColumnNameExactTmpl, f.Path(), expected, got))
+			errCh <- fmt.Errorf(ErrWrongColumnNameExactTmpl, f.Path(), expected, got)
 			continue
 		}
 	}
-	return errs
 }
 
 // ColumnRegexpMatch checks data in a column on regexp match
@@ -102,7 +96,7 @@ func NewColumnRegexpMatch(schema schema.Schema) ColumnRegexpMatch {
 }
 
 // Do check of ColumnRegexpMatch
-func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
+func (cc ColumnRegexpMatch) Do(f *files.File, errCh chan error) {
 	for row := range f.Stream() {
 		for j, record := range row.Data {
 			column, ok := cc.schema.GetColumn(j)
@@ -119,14 +113,10 @@ func (cc ColumnRegexpMatch) Do(f *files.File) (err error) {
 					", column number: " + strconv.Itoa(j+1) +
 					", column name: " + cc.schema.Columns[j].Name.String() +
 					". \"" + record + "\" value is unexpected in this cell"
-
-				err = multierror.Append(err,
-					errors.New(errStr),
-				)
+				errCh <- errors.New(errStr)
 			}
 		}
 	}
-	return err
 }
 
 // ColumnExactContain checks data in column contains strings which specified in schema
@@ -140,7 +130,7 @@ func NewColumnExactContain(schema schema.Schema) ColumnExactContain {
 }
 
 // Do check of ColumnExactContain
-func (c ColumnExactContain) Do(f *files.File) (err error) {
+func (c ColumnExactContain) Do(f *files.File, errCh chan error) {
 	data := make(map[string]map[string]struct{}) // todo: two same columns
 	indexes := make(map[int]string)
 
@@ -173,9 +163,8 @@ func (c ColumnExactContain) Do(f *files.File) (err error) {
 	for index, key := range indexes {
 		e := c.schema.Columns[index].ExactContain.Contain(data[key])
 		if e != nil {
-			errStr := f.Path() + " column: " + strconv.Itoa(index)
-			err = multierror.Append(err, multierror.Prefix(e, errStr))
+			errStr := f.Path() + " column: " + strconv.Itoa(index) + " "
+			errCh <- errors.New(errStr + e.Error())
 		}
 	}
-	return err
 }

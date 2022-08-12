@@ -1,10 +1,8 @@
 package schema
 
 import (
-	"fmt"
+	"errors"
 	"testing"
-
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -36,8 +34,7 @@ func TestContains_Contain(t *testing.T) {
 			},
 			contains: exactContain{"value1", "value2", "value3", "value4"},
 			expected: func() (err error) {
-				err = multierror.Append(err, fmt.Errorf("value4 is defined in schema, but absent in column"))
-				return err
+				return errors.New("value4 is defined in schema, but absent in column\n")
 			},
 		},
 		{
@@ -49,8 +46,7 @@ func TestContains_Contain(t *testing.T) {
 			},
 			contains: exactContain{"value1", "value2", "value5", "value3", "value4"},
 			expected: func() (err error) {
-				err = multierror.Append(err, fmt.Errorf("value5 is defined in schema, but absent in column"))
-				return err
+				return errors.New("value5 is defined in schema, but absent in column\n")
 			},
 		},
 		{
@@ -61,9 +57,7 @@ func TestContains_Contain(t *testing.T) {
 			},
 			contains: exactContain{"value2", "value3", "value4"},
 			expected: func() (err error) {
-				err = multierror.Append(err, fmt.Errorf("value4 is defined in schema, but absent in column"))
-				err = multierror.Append(err, fmt.Errorf("value1 is not defined in schema, but exist in column"))
-				return err
+				return errors.New("value4 is defined in schema, but absent in column\nvalue1 is not defined in schema, but exist in column\n")
 			},
 		},
 	}

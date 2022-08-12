@@ -8,7 +8,7 @@ import (
 // Checker is common interface which should implement each check in checklist
 type Checker interface {
 	// Do is doing check of file
-	Do(f *files.File) error
+	Do(f *files.File, errCh chan error)
 }
 
 // Checklist is list of checks which should be applied to the file
@@ -22,8 +22,8 @@ func NewChecklist(schema schema.Schema) Checklist {
 	if len(schema.Columns) == 0 {
 		return Checklist{}
 	}
-	list = append(list, NewColumnName(schema))
 	list = append(list, NewMissingColumn(schema))
+	list = append(list, NewColumnName(schema))
 	list = append(list, NewColumnRegexpMatch(schema))
 	list = append(list, NewColumnExactContain(schema))
 	return Checklist{List: list}

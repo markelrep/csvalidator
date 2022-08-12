@@ -18,4 +18,6 @@ type Config struct {
 
 	// WorkerPoolSize is amount of workers which will be in pool ready to check a file.
 	WorkerPoolSize int `short:"w" long:"workers" description:"Worker pool size"`
+
+	ErrFilePath string `short:"e" long:"errpath" description:"Path to the error file"`
 }

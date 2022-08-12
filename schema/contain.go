@@ -2,23 +2,23 @@ package schema
 
 import (
 	"errors"
-
-	"github.com/hashicorp/go-multierror"
+	"strings"
 )
 
 // exactContain represent slice of values which should be contained in column
 type exactContain []string
 
 // Contain checks that column contains values from schema and vice versa
-func (c exactContain) Contain(values map[string]struct{}) (err error) {
+func (c exactContain) Contain(values map[string]struct{}) error {
 	containMap := make(map[string]struct{})
+	var strBuilder strings.Builder
 
 	for _, contain := range c {
 		containMap[contain] = struct{}{}
 		_, ok := values[contain]
 		if !ok {
 			errStr := contain + " is defined in schema, but absent in column"
-			err = multierror.Append(err, errors.New(errStr))
+			strBuilder.WriteString(errStr + "\n")
 		}
 	}
 
@@ -26,10 +26,15 @@ func (c exactContain) Contain(values map[string]struct{}) (err error) {
 		_, ok := containMap[v]
 		if !ok {
 			errStr := v + " is not defined in schema, but exist in column"
-			err = multierror.Append(err, errors.New(errStr))
+			strBuilder.WriteString(errStr + "\n")
 		}
 	}
-	return err
+
+	str := strBuilder.String()
+	if str != "" {
+		return errors.New(str)
+	}
+	return nil
 }
 
 // IsNoOp return true if check is absent in schema

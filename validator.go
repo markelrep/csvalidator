@@ -10,7 +10,7 @@ import (
 	"github.com/markelrep/csvalidator/config"
 
 	"github.com/markelrep/csvalidator/schema"
-	"github.com/markelrep/csvalidator/worker"
+	"github.com/markelrep/worker"
 
 	"github.com/markelrep/csvalidator/checklist"
 	"github.com/markelrep/csvalidator/files"

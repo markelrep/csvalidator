@@ -3,7 +3,7 @@ on: [push]
 permissions:
   contents: read
 jobs:
-  golangci:
+  golang-ci:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
@@ -18,7 +18,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-  testandbuild:
+  test-and-build:
     strategy:
       matrix:
         os: [ macos-latest, ubuntu-latest ]
